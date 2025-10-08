@@ -377,7 +377,11 @@ class Command(BaseCommand):
 
         print(f"{self.source_name}: Grouped stop times into {len(stop_times_by_trip)} trip groups")
 
-        trips = {}
+        created_trip_ids = set()
+        trip_id_to_pk = {}
+        valid_trips = []
+        trips_with_start = 0
+        trips_without_start = 0
 
         print(f"{self.source_name}: Processing {len(feed.trips)} trips with optimized stop time calculation")
         for i, line in enumerate(feed.trips.itertuples()):
@@ -388,13 +392,19 @@ class Command(BaseCommand):
             trip_id = line.trip_id
 
             # Create trip object
+            block_id = getattr(line, "block_id", None)
+            if block_id is not None and not pd.isna(block_id) and str(block_id).strip() not in ("", "N/A", "n/a"):
+                block = str(block_id).strip()
+            else:
+                block = ""
+
             trip = Trip(
                 route=route,
                 calendar=calendars[line.service_id],
                 inbound=getattr(line, "direction_id", 0) == 1,
                 headsign=getattr(line, "trip_headsign", ""),
                 ticket_machine_code=trip_id,
-                block=getattr(line, "block_id", ""),
+                block=block,
                 vehicle_journey_code=getattr(line, "trip_short_name", ""),
                 operator=self.route_operators[line.route_id],
             )
@@ -412,31 +422,27 @@ class Command(BaseCommand):
                     stop_id = last_stop.stop_id
                     if self.stop_prefix:
                         stop_id = f"{self.stop_prefix}{stop_id}"
-                    trip.destination = stops.get(stop_id)
+                     trip.destination = stops.get(stop_id)
 
-            trips[trip_id] = trip
-
-        print(f"{self.source_name}: Finished processing {len(trips)} trips with timings")
-
-        trips_with_start = 0
-        trips_without_start = 0
-
-        for trip_id in trips:
-            trip = trips[trip_id]
             if trip.start is None:
                 logger.warning(f"trip {trip_id} has no stop times")
-                trips[trip_id] = None
                 trips_without_start += 1
             else:
+                valid_trips.append(trip)
+                created_trip_ids.add(trip_id)
                 trips_with_start += 1
+                if len(valid_trips) >= 1000:
+                    Trip.objects.bulk_create(valid_trips)
+                    for t in valid_trips:
+                        trip_id_to_pk[t.ticket_machine_code] = t.pk
+                    valid_trips = []
 
-        print(f"{self.source_name}: {trips_with_start} trips with start times, {trips_without_start} without")
+        if valid_trips:
+            Trip.objects.bulk_create(valid_trips)
+            for t in valid_trips:
+                trip_id_to_pk[t.ticket_machine_code] = t.pk
 
-        valid_trips = [trip for trip in trips.values() if isinstance(trip, Trip)]
-        print(f"{self.source_name}: Creating {len(valid_trips)} valid trips")
-
-        Trip.objects.bulk_create(valid_trips, batch_size=1000)
-        print(f"{self.source_name}: Trip bulk create completed")
+        print(f"{self.source_name}: Finished processing trips, {trips_with_start} with start times, {trips_without_start} without")
 
         # Handle stop times with COPY for performance
         print(f"{self.source_name}: Processing {len(feed.stop_times)} stop times")
@@ -489,14 +495,14 @@ class Command(BaseCommand):
                     stop_id = f"{self.stop_prefix}{stop_id}"
 
                 # Check if trip exists
-                if line.trip_id in trips and isinstance(trips[line.trip_id], Trip):
+                if line.trip_id in created_trip_ids:
                     copy.write_row(
                         (
                             stop_id,
                             arrival,
                             departure,
                             line.stop_sequence,
-                            trips[line.trip_id].pk,
+                            trip_id_to_pk[line.trip_id],
                             timing_status,
                             pick_up,
                             set_down,
@@ -511,8 +517,6 @@ class Command(BaseCommand):
 
         logger.info(f"{self.source_name}: Processed {stop_times_processed} stop times, skipped {stop_times_skipped}")
         print(f"{self.source_name}: Completed processing stop times: {stop_times_processed} processed, {stop_times_skipped} skipped")
-
-        del trips
 
         services = Service.objects.filter(id__in=self.services.keys())
 

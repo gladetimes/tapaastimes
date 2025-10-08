@@ -19,16 +19,14 @@
 ## Code Style Guidelines
 
 ### Python
-- Use `ruff` for linting and formatting (4 spaces, black-compatible)
+- Use `ruff` for linting/formatting (4 spaces, black-compatible)
 - Follow Django conventions: models in `models.py`, views in `views.py`
-- Use type hints where beneficial
+- Use type hints where beneficial, snake_case for variables/functions
 - Import order: stdlib, Django, third-party, local
-- Use descriptive variable names, snake_case for functions/variables
 - Handle exceptions appropriately, avoid bare `except:`
 
 ### JavaScript/TypeScript
-- Use `biome` for linting (space indentation)
-- Strict TypeScript mode enabled
+- Use `biome` for linting (space indentation), strict TypeScript mode
 - React with JSX, functional components preferred
 - Use descriptive names, camelCase for variables/functions
 - Import order: React, third-party, local components/utils
