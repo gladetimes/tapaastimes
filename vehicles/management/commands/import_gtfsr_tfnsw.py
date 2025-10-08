@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -14,8 +15,6 @@ from bustimes.utils import get_calendars
 from ...models import Vehicle, VehicleJourney, VehicleLocation
 from ..import_live_vehicles import ImportLiveVehiclesCommand
 
-from .import_gtfsr_ie import Command as GTFSRCommand
-
 occupancies = {
     0: "Empty",
     1: "Many seats available",
@@ -29,75 +28,55 @@ occupancies = {
 }
 
 
-class Command(GTFSRCommand):
-    """
-    Import GTFS-R (Realtime) vehicle positions from worldwide feeds.
-
-    This command is configurable via DataSource.settings and supports:
-    - Custom timezones (defaults to UTC)
-    - API key authentication
-    - Custom HTTP headers
-    - Configurable vehicle code schemes
-    - Custom occupancy status mappings
-
-    Usage: python manage.py import_gtfsr_worldwide <source_name>
-
-    DataSource.settings["gtfsr"] should contain:
-    {
-        "timezone": "Europe/London",  # optional, defaults to UTC
-        "api_key": "your_api_key",    # optional
-        "headers": {"Authorization": "Bearer token"},  # optional
-        "vehicle_code_scheme": "CUSTOM",  # optional
-        "occupancy_mapping": {"0": "Empty", "1": "Few seats"}  # optional
-    }
-    """
-    def add_arguments(self, parser):
-        super().add_arguments(parser)
-        parser.add_argument("source_name", type=str)
-
-    def handle(self, source_name, **options):
-        self.source_name = self.vehicle_code_scheme = source_name
-        super().handle(**options)
+class Command(ImportLiveVehiclesCommand):
+    source_name = "TfNSW"
+    vehicle_code_scheme = "TfNSW"
 
     def do_source(self):
-        super().do_source()
-
-        # Override URL with DataSource URL
-        self.url = self.source.url
-
-        # Load GTFS-R specific settings from DataSource
-        self.gtfsr_settings = self.source.settings.get("gtfsr", {}) if self.source.settings else {}
-
-        # Set timezone (default to UTC)
-        timezone_str = self.gtfsr_settings.get("timezone", "UTC")
-        self.tzinfo = ZoneInfo(timezone_str)
-
-        # Override vehicle code scheme if specified
-        if "vehicle_code_scheme" in self.gtfsr_settings:
-            self.vehicle_code_scheme = self.gtfsr_settings["vehicle_code_scheme"]
-
-        # Custom occupancy mapping if specified
-        self.occupancy_mapping = self.gtfsr_settings.get("occupancy_mapping", occupancies)
-
+        self.tzinfo = ZoneInfo("Australia/Sydney")
+        self.source, _ = DataSource.objects.get_or_create(name=self.source_name)
+        self.url = "https://api.transport.nsw.gov.au/v1/gtfs/realtime/vehiclepos"
         return self
 
+    @staticmethod
+    def get_datetime(item):
+        return datetime.fromtimestamp(item.vehicle.timestamp, timezone.utc)
+
+    @staticmethod
+    def get_vehicle_identity(item):
+        return item.vehicle.vehicle.id
+
+    @staticmethod
+    def get_journey_identity(item):
+        return (
+            item.vehicle.trip.route_id,
+            item.vehicle.trip.trip_id,
+            item.vehicle.trip.start_date,
+        )
+
+    @staticmethod
+    def get_item_identity(item):
+        return item.vehicle.timestamp
+
     def get_items(self):
-        # Get authentication settings
-        api_key = self.gtfsr_settings.get("api_key")
-        headers = self.gtfsr_settings.get("headers", {})
+        # TfNSW requires API key in Authorization header
+        api_key = os.environ.get('TFNSW_API_KEY')
+        if not api_key:
+            raise ValueError("TFNSW_API_KEY not set in environment")
 
-        # Add API key to headers if specified
-        if api_key:
-            headers["x-api-key"] = api_key
-
-        # Make request with custom headers
-        response = self.session.get(self.url, headers=headers, timeout=10)
+        response = self.session.get(
+            self.url, headers={"Authorization": f"apikey {api_key}"}, timeout=10
+        )
         response.raise_for_status()
 
         feed = gtfs_realtime_pb2.FeedMessage()
         feed.ParseFromString(response.content)
 
         return feed.entity
+
+    def get_vehicle(self, item):
+        vehicle_code = item.vehicle.vehicle.id
+        return Vehicle.objects.get_or_create(code=vehicle_code, source=self.source)
 
     def get_journey(self, item, vehicle):
         # GTFS spec for working out datetimes:
@@ -198,5 +177,5 @@ class Command(GTFSRCommand):
             latlong=GEOSGeometry(
                 f"POINT({item.vehicle.position.longitude} {item.vehicle.position.latitude})"
             ),
-            occupancy=self.occupancy_mapping.get(item.vehicle.occupancy_status or None),
+            occupancy=occupancies.get(item.vehicle.occupancy_status or None),
         )

@@ -301,6 +301,7 @@ TFE_OPERATORS = {
 }
 
 NTA_API_KEY = os.environ.get("NTA_API_KEY")  # Ireland
+TFNSW_API_KEY = os.environ.get("TFNSW_API_KEY")  # New South Wales
 ALLOW_VEHICLE_NOTES_OPERATORS = (
     "NATX",  # National Express
     "SCLK",  # Scottish Citylink
