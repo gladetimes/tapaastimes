@@ -35,6 +35,7 @@ export type Vehicle = {
   tfl_code?: string;
   trip_id?: number;
   service_id?: number;
+  source?: string;
   service?: {
     url?: string;
     line_name: string;
@@ -68,6 +69,10 @@ type VehicleMarkerProps = {
 
 function VehicleMarker({ vehicle, selected }: VehicleMarkerProps) {
   let className = "vehicle-marker";
+
+  if (vehicle.source === "user") {
+    className += " user-tracked";
+  }
 
   let rotation = vehicle.heading;
 

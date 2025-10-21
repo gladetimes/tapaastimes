@@ -36,6 +36,11 @@ class Command(BaseCommand):
             stop_times_count = StopTime.objects.filter(trip__route__source=source).delete()[0]
             self.stdout.write(f'Deleted {stop_times_count} StopTimes')
 
+            # Nullify destination references to stops from this source before deleting trips
+            trips_with_destination = Trip.objects.filter(destination__source=source)
+            trips_with_destination.update(destination=None)
+            self.stdout.write(f'Nullified destination for {trips_with_destination.count()} Trips')
+
             # Trips
             trips_count = Trip.objects.filter(route__source=source).delete()[0]
             self.stdout.write(f'Deleted {trips_count} Trips')

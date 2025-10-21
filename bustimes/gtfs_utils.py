@@ -3,31 +3,37 @@ from .models import Calendar, CalendarDate
 
 MODES = {
     0: "tram",
+    1: "subway",
     2: "rail",
     3: "bus",
     4: "ferry",
     6: "cable car",
     200: "coach",
+    711: "bus",  # MTA shuttle buses
     1100: "air",
 }
 
 
 def get_calendars(feed, source) -> dict:
-    calendars = {
-        row.service_id: Calendar(
-            mon=row.monday,
-            tue=row.tuesday,
-            wed=row.wednesday,
-            thu=row.thursday,
-            fri=row.friday,
-            sat=row.saturday,
-            sun=row.sunday,
-            start_date=row.start_date,
-            end_date=row.end_date,
-            source=source,
-        )
-        for row in feed.calendar.itertuples()
-    }
+    calendars = {}
+
+    # Handle feeds with calendar.txt
+    if feed.calendar is not None:
+        calendars = {
+            row.service_id: Calendar(
+                mon=row.monday,
+                tue=row.tuesday,
+                wed=row.wednesday,
+                thu=row.thursday,
+                fri=row.friday,
+                sat=row.saturday,
+                sun=row.sunday,
+                start_date=row.start_date,
+                end_date=row.end_date,
+                source=source,
+            )
+            for row in feed.calendar.itertuples()
+        }
 
     calendar_dates = []
 
@@ -37,8 +43,11 @@ def get_calendars(feed, source) -> dict:
             # 1: operates, 2: does not operate
 
             if (calendar := calendars.get(row.service_id)) is None:
+                # Create calendar for service_id if it doesn't exist
+                # (happens when feed only has calendar_dates.txt)
                 calendar = Calendar(
                     start_date=row.date,  # dummy date
+                    source=source,
                 )
                 calendars[row.service_id] = calendar
             calendar_dates.append(

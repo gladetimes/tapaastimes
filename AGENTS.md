@@ -1,38 +1,30 @@
-# Agent Instructions for bustimes.org
+# Agent Instructions for gladetimes
 
 ## Build/Lint/Test Commands
-
-### Python/Django
-- **Install deps**: `uv sync`
-- **Run all tests**: `python manage.py test`
-- **Run single test**: `python manage.py test app.tests.TestClass.test_method`
-- **Lint**: `ruff check . && ruff format .`
-- **Type check**: `python manage.py check`
+### Python/Django (Python >=3.13)
+- Install: `uv sync --group dev --group test`
+- All tests: `python manage.py test`
+- Single test: `python manage.py test app.tests.TestClass.test_method`
+- Lint/format: `ruff check . && ruff format .` (unsafe-fixes enabled)
+- Type check: `python manage.py check`
 
 ### JavaScript/TypeScript
-- **Install deps**: `npm install`
-- **Build**: `npm run build`
-- **Watch**: `npm run watch`
-- **Test**: `npm test`
-- **Lint**: `npm run lint` (TypeScript type checking)
+- Install: `npm install`
+- Build/watch: `npm run build` / `npm run watch`
+- Test: `npm test`
+- Lint: `tsc -noEmit` (strict mode)
 
 ## Code Style Guidelines
-
 ### Python
-- Use `ruff` for linting/formatting (4 spaces, black-compatible)
-- Follow Django conventions: models in `models.py`, views in `views.py`
-- Use type hints where beneficial, snake_case for variables/functions
-- Import order: stdlib, Django, third-party, local
-- Handle exceptions appropriately, avoid bare `except:`
+- `ruff` formatting (4 spaces, black-compatible), snake_case, type hints where beneficial
+- Import order: stdlib → Django → third-party → local
+- Proper exception handling, avoid bare `except:`, separate models/views files
 
 ### JavaScript/TypeScript
-- Use `biome` for linting (space indentation), strict TypeScript mode
-- React with JSX, functional components preferred
-- Use descriptive names, camelCase for variables/functions
-- Import order: React, third-party, local components/utils
-- Prefer const/let over var, arrow functions
+- `biome` linting (space indentation, strict mode), camelCase, const/let over var
+- React functional components, JSX, arrow functions, no parameter assignment/expression assignment
+- Import order: React → third-party → local
 
 ### General
-- No comments unless explaining complex business logic
-- Follow existing patterns in codebase
-- Run pre-commit hooks before committing: `pre-commit run --all-files`
+- No comments unless complex business logic
+- Run pre-commit hooks: `pre-commit run --all-files` (includes ruff, biome, djade for Django templates)
