@@ -24,7 +24,8 @@
 - `biome` linting (space indentation, strict mode), camelCase, const/let over var
 - React functional components, JSX, arrow functions, no parameter assignment/expression assignment
 - Import order: React → third-party → local
+- Parameter assignment and expression assignment warnings enabled
 
 ### General
 - No comments unless complex business logic
-- Run pre-commit hooks: `pre-commit run --all-files` (includes ruff, biome, djade for Django templates)
+- Run pre-commit hooks: `pre-commit run --all-files` (includes ruff, biome, djade, trailing-whitespace, end-of-file-fixer)
