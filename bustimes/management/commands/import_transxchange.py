@@ -353,6 +353,10 @@ def get_stop_time(trip, cell, stops: dict):
         else:
             stop_time.stop = stops[atco_code]
             trip.destination = stop_time.stop
+            if trip.destination.locality and trip.destination.common_name:
+                trip.headsign = f"{trip.destination.locality.name}, {trip.destination.common_name}"
+            elif trip.destination.locality:
+                trip.headsign = trip.destination.locality.name
     else:
         # stop missing from TransXChange StopPoints - this should never happen
         try:
@@ -364,6 +368,10 @@ def get_stop_time(trip, cell, stops: dict):
         else:
             stop_time.stop = stops[atco_code]
             trip.destination = stop_time.stop
+            if trip.destination.locality and trip.destination.common_name:
+                trip.headsign = f"{trip.destination.locality.name}, {trip.destination.common_name}"
+            elif trip.destination.locality:
+                trip.headsign = trip.destination.locality.name
 
     return stop_time
 

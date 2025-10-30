@@ -9,13 +9,13 @@ class Command(BaseCommand):
         source, _ = DataSource.objects.get_or_create(name="MyTrip")
 
         session = requests.Session()
-        session.headers.update({"x-api-key": source.settings["x-api-key"]})
+        # session.headers.update({"x-api-key": source.settings["x-api-key"]})
 
         response = session.get(
-            "https://mytrip-bustimes.api.passengercloud.com/ticketing/topups"
+            "https://mytrip.arcticapi.com/ticketing/topups"
         )
 
-        items = response.json()["_embedded"]["topup:category"]
+        items = response.json()["_links"]["topup:category"]
 
         for item in items:
             name = item["title"]

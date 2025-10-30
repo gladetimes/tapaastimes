@@ -14,7 +14,7 @@ def get_content(slug):
     #    if vehicle.latest_journey.destination:
     #        content += " to {vehicle.latest_journey.destination}"
 
-    return f"[{content}](https://bustimes.org/vehicles/{slug})"
+    return f"[{content}](https://gladetimes.midlandbus.uk/vehicles/{slug})"
 
 
 class Command(BaseCommand):

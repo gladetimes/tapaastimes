@@ -44,6 +44,7 @@ dependencies = [
     "django-debug-toolbar-force>=0.2,<0.3",
     "django-debug-toolbar-template-profiler>=2.1.0,<3",
     "folium>=0.20.0",
+    "geopandas>=1.0.0,<2",
     "xmltodict>=1.0.2",
     "django-csp>=4.0",
 ]

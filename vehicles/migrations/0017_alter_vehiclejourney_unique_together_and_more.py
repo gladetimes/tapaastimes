@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            "UPDATE vehicles_vehiclejourney SET date = datetime::date WHERE date IS NULL",
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.AlterUniqueTogether(
             name='vehiclejourney',
             unique_together=set(),
