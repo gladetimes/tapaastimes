@@ -34,6 +34,11 @@
   color: #fff;
 }
 
+.vehicle-marker.user-tracked {
+  border-style: dashed;
+  border-color: #ff6b35;
+}
+
 .maplibregl-marker:hover .vehicle-marker,
 .vehicle-marker.selected {
   outline: 1px solid var(--marker-arrow-color); /* inverse of --marker-border-color */

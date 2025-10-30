@@ -107,6 +107,11 @@ export default function VehiclePopup({
       {item.vehicle?.features && (
         <div>{item.vehicle.features.replace("<br>", ", ")}</div>
       )}
+      {item.source === "user" && (
+        <div style={{ fontStyle: "italic", color: "#666" }}>
+          User-tracked vehicle
+        </div>
+      )}
       {item.seats && (
         <div>
           <svg

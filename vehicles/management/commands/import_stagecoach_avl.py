@@ -111,7 +111,7 @@ class Command(ImportLiveVehiclesCommand):
         if vehicle or item.get("hg") == "0":
             return vehicle, False
 
-        return Vehicle.objects.filter(operator__in=self.operators).get_or_create(
+        return Vehicle.objects.get_or_create(
             {"operator": operator, "source": self.source, "fleet_code": vehicle_code},
             code=vehicle_code,
         )

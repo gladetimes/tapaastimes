@@ -49,7 +49,7 @@
 {% block header %}
 <header class="site-header">
     <div>
-        <a href="/" class="site-name">bustimes.org</a>
+        <a href="/" class="site-name">gladetimes</a>
         <ul>
             <li><a href="/map{% if object.latlong %}#16/{{ object.latlong.y|floatformat:4 }}/{{ object.latlong.x|floatformat:4 }}{% endif %}">Map</a></li>
         </ul>
@@ -80,6 +80,9 @@
                     {% csrf_token %}
                     <button type="submit" class="button">Log out</button>
                 </li>
+                {% if user.is_superuser %}
+                    <li><a href="/admin/">Admin</a></li>
+                {% endif %}
                 {% if user.trusted %}
                     <li><a href="/vehicles/edits?status=pending">Pending edits</a></li>
                 {% endif %}
@@ -89,6 +92,9 @@
         </form>
     {% endif %}
     <ul>
+        {% if not user.is_authenticated %}
+            <li><a href="{% url 'login' %}" class="button">Log in</a></li>
+        {% endif %}
         <li><a href="/contact">Contact</a></li>
         <li><a href="/data">Data sources</a></li>
         <li><a href="/privacy">Privacy policy</a></li>

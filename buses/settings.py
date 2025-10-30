@@ -20,14 +20,14 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split()
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://bustimes.org",
+    "https://gladetimes",
 ).split()
 CSRF_FAILURE_VIEW = "busstops.views.csrf_failure"
 
 TEST = "test" in sys.argv or "pytest" in sys.argv[0]
 DEBUG = bool(os.environ.get("DEBUG", False))
 
-DEFAULT_FROM_EMAIL = '"bustimes.org" <bustimes.org@bustimes.org>'
+DEFAULT_FROM_EMAIL = '"gladetimes" <gladetimes@gladetimes>'
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
@@ -318,6 +318,7 @@ TFE_OPERATORS = {
 }
 
 NTA_API_KEY = os.environ.get("NTA_API_KEY")  # Ireland
+
 ALLOW_VEHICLE_NOTES_OPERATORS = (
     "NATX",  # National Express
     "SCLK",  # Scottish Citylink

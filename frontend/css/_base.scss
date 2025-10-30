@@ -1,9 +1,9 @@
 @charset "UTF-8";
 
 :root {
-    --brand-color: #ffff9e;
-    --brand-color-darker: #de8;
-    --brand-color-darker-darker: #cd7;
+    --brand-color: #e6ccff;
+    --brand-color-darker: #b366ff;
+    --brand-color-darker-darker: #9933ff;
     --border-color: var(--brand-color-darker);
     --border-color-darker: var(--brand-color-darker-darker);
 
@@ -22,9 +22,9 @@
 }
 
 .dark-mode {
-    --brand-color: #444;
-    --brand-color-darker: #555;
-    --brand-color-darker-darker: #666;
+    --brand-color: #4d1a7a;
+    --brand-color-darker: #6b2ca5;
+    --brand-color-darker-darker: #8b3dd1;
 
     --border-color: #444;
     --border-color-darker: #555;

@@ -3,7 +3,7 @@
 
 ## What's this?
 
-Source code for [the website bustimes.org](https://bustimes.org/). (The "the" is important – running your own "instance" is not recommended or supported.)
+Source code for [the website gladetimes](https://gladetimes). (The "the" is important – running your own "instance" is not recommended or supported.)
 
 It's a magnificent monolithic Django app that's evolved over time (since 2015). The structure doesn't make complete sense:
 

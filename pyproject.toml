@@ -1,5 +1,5 @@
 [project]
-name = "bustimes.org"
+name = "gladetimes"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Josh Goodwin", email = "j@joshuagoodw.in" }]

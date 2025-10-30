@@ -56,8 +56,8 @@ echo "Importing Traveline National Dataset"
 docker compose exec web uv run ./manage.py import_tnds itzmxrkomg@icloud.com itzNot@Mxrk0mg 
 echo "Traveline National Dataset import complete"
 
-# echo "Importing midland Group LTD timetables"
-# docker compose exec web uv run ./manage.py import_bod_timetables github midland
-# echo "Finished midland timetable import"
+echo "Importing midland Group LTD timetables"
+docker compose exec web uv run ./manage.py import_bod_timetables github midland
+echo "Finished midland timetable import"
 
 echo "UK Import Complete"
