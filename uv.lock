@@ -92,143 +92,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bustimes-org"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "boto3" },
-    { name = "ciso8601" },
-    { name = "dj-database-url" },
-    { name = "django" },
-    { name = "django-autoslug" },
-    { name = "django-cors-headers" },
-    { name = "django-csp" },
-    { name = "django-debug-toolbar" },
-    { name = "django-debug-toolbar-force" },
-    { name = "django-debug-toolbar-template-profiler" },
-    { name = "django-email-obfuscator" },
-    { name = "django-filter" },
-    { name = "django-multidb-router" },
-    { name = "django-simple-history" },
-    { name = "django-sql-utils" },
-    { name = "django-template-minifier" },
-    { name = "django-turnstile" },
-    { name = "djangorestframework" },
-    { name = "folium" },
-    { name = "gtfs-realtime-bindings" },
-    { name = "gunicorn" },
-    { name = "haversine" },
-    { name = "huey" },
-    { name = "jinja2" },
-    { name = "lightningcss-cli" },
-    { name = "numpy" },
-    { name = "psycopg" },
-    { name = "pygments" },
-    { name = "pyyaml" },
-    { name = "redis" },
-    { name = "requests" },
-    { name = "sentry-sdk", extra = ["django"] },
-    { name = "shapely" },
-    { name = "tenacity" },
-    { name = "titlecase" },
-    { name = "uk-postcode-utils" },
-    { name = "webcolors" },
-    { name = "websockets" },
-    { name = "whitenoise" },
-    { name = "xmltodict" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "django-watchfiles" },
-    { name = "ipdb" },
-    { name = "ipython" },
-    { name = "uritemplate" },
-]
-test = [
-    { name = "asgiref" },
-    { name = "coverage" },
-    { name = "django-slowtests" },
-    { name = "fakeredis" },
-    { name = "govuk-bank-holidays" },
-    { name = "gtfs-kit" },
-    { name = "lxml" },
-    { name = "pyrosm" },
-    { name = "requests-toolbelt" },
-    { name = "tblib" },
-    { name = "time-machine" },
-    { name = "vcrpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beautifulsoup4", specifier = ">=4.12.1,<5" },
-    { name = "boto3", specifier = ">=1.18.42,<2" },
-    { name = "ciso8601", specifier = ">=2.2.0,<3" },
-    { name = "dj-database-url", specifier = ">=3.0.0,<4" },
-    { name = "django", specifier = ">=5.2,<5.3" },
-    { name = "django-autoslug", specifier = ">=1.9.8,<2" },
-    { name = "django-cors-headers", specifier = ">=4.2.0,<5" },
-    { name = "django-csp", specifier = ">=4.0" },
-    { name = "django-debug-toolbar", specifier = ">=6.0.0,<7" },
-    { name = "django-debug-toolbar-force", specifier = ">=0.2,<0.3" },
-    { name = "django-debug-toolbar-template-profiler", specifier = ">=2.1.0,<3" },
-    { name = "django-email-obfuscator", specifier = ">=0.1.5,<0.2" },
-    { name = "django-filter", specifier = "~=25.1" },
-    { name = "django-multidb-router", specifier = ">=0.10" },
-    { name = "django-simple-history", specifier = ">=3.0.0,<4" },
-    { name = "django-sql-utils", specifier = ">=0.7.0,<0.8" },
-    { name = "django-template-minifier", specifier = ">=1.1.0,<2" },
-    { name = "django-turnstile", specifier = ">=0.1.0,<0.2" },
-    { name = "djangorestframework", specifier = ">=3.15" },
-    { name = "folium", specifier = ">=0.20.0" },
-    { name = "gtfs-realtime-bindings", specifier = ">=1.0.0,<2" },
-    { name = "gunicorn", specifier = ">=23.0.0,<24" },
-    { name = "haversine", specifier = ">=2.5.1,<3" },
-    { name = "huey", specifier = ">=2.4.3,<3" },
-    { name = "jinja2", specifier = ">=3.1.6,<4" },
-    { name = "lightningcss-cli", specifier = ">=1.29.2,<2" },
-    { name = "numpy", specifier = "~=2.3.0" },
-    { name = "psycopg", specifier = ">=3.1.8,<4" },
-    { name = "pygments", specifier = ">=2.15.1,<3" },
-    { name = "pyyaml", specifier = ">=6.0.0,<7" },
-    { name = "redis", specifier = ">=6.0.0,<7" },
-    { name = "requests", specifier = ">=2.32.3,<3" },
-    { name = "sentry-sdk", extras = ["django"], specifier = ">=2.4.0,<3" },
-    { name = "shapely", specifier = ">=2.0.1,<3" },
-    { name = "tenacity", specifier = ">=9.0.0,<10" },
-    { name = "titlecase", specifier = "~=2.3" },
-    { name = "uk-postcode-utils", specifier = "~=1.1" },
-    { name = "webcolors", specifier = ">=24.6.0,<25" },
-    { name = "websockets", specifier = ">=14.2" },
-    { name = "whitenoise", specifier = ">=6.2.0,<7" },
-    { name = "xmltodict", specifier = ">=1.0.2" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "django-watchfiles", specifier = ">=1.4.0" },
-    { name = "ipdb", specifier = ">=0.13.9,<0.14" },
-    { name = "ipython", specifier = ">=9.0.2,<10" },
-    { name = "uritemplate", specifier = ">=4.1.1,<5" },
-]
-test = [
-    { name = "asgiref", specifier = ">=3.4.1,<4" },
-    { name = "coverage", specifier = ">=7.6.1,<8" },
-    { name = "django-slowtests", specifier = ">=1.1.1,<2" },
-    { name = "fakeredis", specifier = ">=2.12.1,<3" },
-    { name = "govuk-bank-holidays", specifier = ">=0.15" },
-    { name = "gtfs-kit", specifier = ">=11.0.0" },
-    { name = "lxml", specifier = ">=6.0.0,<7" },
-    { name = "pyrosm", specifier = ">=0.6.2" },
-    { name = "requests-toolbelt", specifier = ">=1.0.0,<2" },
-    { name = "tblib", specifier = ">=3.0.0,<4" },
-    { name = "time-machine", specifier = ">=2.4.0,<3" },
-    { name = "vcrpy", specifier = ">=7.0.0,<8" },
-]
-
-[[package]]
 name = "certifi"
 version = "2025.10.5"
 source = { registry = "https://pypi.org/simple" }
@@ -685,6 +548,145 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8c/76/e1960ba846f153ab109575242abf89dc98f8e057faa32f3decf4cce9247a/geopandas-1.1.1.tar.gz", hash = "sha256:1745713f64d095c43e72e08e753dbd271678254b24f2e01db8cdb8debe1d293d", size = 332655, upload-time = "2025-06-26T21:04:56.57Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/70/d5cd0696eff08e62fdbdebe5b46527facb4e7220eabe0ac6225efab50168/geopandas-1.1.1-py3-none-any.whl", hash = "sha256:589e61aaf39b19828843df16cb90234e72897e2579be236f10eee0d052ad98e8", size = 338365, upload-time = "2025-06-26T21:04:55.139Z" },
+]
+
+[[package]]
+name = "gladetimes"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "boto3" },
+    { name = "ciso8601" },
+    { name = "dj-database-url" },
+    { name = "django" },
+    { name = "django-autoslug" },
+    { name = "django-cors-headers" },
+    { name = "django-csp" },
+    { name = "django-debug-toolbar" },
+    { name = "django-debug-toolbar-force" },
+    { name = "django-debug-toolbar-template-profiler" },
+    { name = "django-email-obfuscator" },
+    { name = "django-filter" },
+    { name = "django-multidb-router" },
+    { name = "django-simple-history" },
+    { name = "django-sql-utils" },
+    { name = "django-template-minifier" },
+    { name = "django-turnstile" },
+    { name = "djangorestframework" },
+    { name = "folium" },
+    { name = "geopandas" },
+    { name = "gtfs-realtime-bindings" },
+    { name = "gunicorn" },
+    { name = "haversine" },
+    { name = "huey" },
+    { name = "jinja2" },
+    { name = "lightningcss-cli" },
+    { name = "numpy" },
+    { name = "psycopg" },
+    { name = "pygments" },
+    { name = "pyyaml" },
+    { name = "redis" },
+    { name = "requests" },
+    { name = "sentry-sdk", extra = ["django"] },
+    { name = "shapely" },
+    { name = "tenacity" },
+    { name = "titlecase" },
+    { name = "uk-postcode-utils" },
+    { name = "webcolors" },
+    { name = "websockets" },
+    { name = "whitenoise" },
+    { name = "xmltodict" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "django-watchfiles" },
+    { name = "ipdb" },
+    { name = "ipython" },
+    { name = "uritemplate" },
+]
+test = [
+    { name = "asgiref" },
+    { name = "coverage" },
+    { name = "django-slowtests" },
+    { name = "fakeredis" },
+    { name = "govuk-bank-holidays" },
+    { name = "gtfs-kit" },
+    { name = "lxml" },
+    { name = "pyrosm" },
+    { name = "requests-toolbelt" },
+    { name = "tblib" },
+    { name = "time-machine" },
+    { name = "vcrpy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.12.1,<5" },
+    { name = "boto3", specifier = ">=1.18.42,<2" },
+    { name = "ciso8601", specifier = ">=2.2.0,<3" },
+    { name = "dj-database-url", specifier = ">=3.0.0,<4" },
+    { name = "django", specifier = ">=5.2,<5.3" },
+    { name = "django-autoslug", specifier = ">=1.9.8,<2" },
+    { name = "django-cors-headers", specifier = ">=4.2.0,<5" },
+    { name = "django-csp", specifier = ">=4.0" },
+    { name = "django-debug-toolbar", specifier = ">=6.0.0,<7" },
+    { name = "django-debug-toolbar-force", specifier = ">=0.2,<0.3" },
+    { name = "django-debug-toolbar-template-profiler", specifier = ">=2.1.0,<3" },
+    { name = "django-email-obfuscator", specifier = ">=0.1.5,<0.2" },
+    { name = "django-filter", specifier = "~=25.1" },
+    { name = "django-multidb-router", specifier = ">=0.10" },
+    { name = "django-simple-history", specifier = ">=3.0.0,<4" },
+    { name = "django-sql-utils", specifier = ">=0.7.0,<0.8" },
+    { name = "django-template-minifier", specifier = ">=1.1.0,<2" },
+    { name = "django-turnstile", specifier = ">=0.1.0,<0.2" },
+    { name = "djangorestframework", specifier = ">=3.15" },
+    { name = "folium", specifier = ">=0.20.0" },
+    { name = "geopandas", specifier = ">=1.0.0,<2" },
+    { name = "gtfs-realtime-bindings", specifier = ">=1.0.0,<2" },
+    { name = "gunicorn", specifier = ">=23.0.0,<24" },
+    { name = "haversine", specifier = ">=2.5.1,<3" },
+    { name = "huey", specifier = ">=2.4.3,<3" },
+    { name = "jinja2", specifier = ">=3.1.6,<4" },
+    { name = "lightningcss-cli", specifier = ">=1.29.2,<2" },
+    { name = "numpy", specifier = "~=2.3.0" },
+    { name = "psycopg", specifier = ">=3.1.8,<4" },
+    { name = "pygments", specifier = ">=2.15.1,<3" },
+    { name = "pyyaml", specifier = ">=6.0.0,<7" },
+    { name = "redis", specifier = ">=6.0.0,<7" },
+    { name = "requests", specifier = ">=2.32.3,<3" },
+    { name = "sentry-sdk", extras = ["django"], specifier = ">=2.4.0,<3" },
+    { name = "shapely", specifier = ">=2.0.1,<3" },
+    { name = "tenacity", specifier = ">=9.0.0,<10" },
+    { name = "titlecase", specifier = "~=2.3" },
+    { name = "uk-postcode-utils", specifier = "~=1.1" },
+    { name = "webcolors", specifier = ">=24.6.0,<25" },
+    { name = "websockets", specifier = ">=14.2" },
+    { name = "whitenoise", specifier = ">=6.2.0,<7" },
+    { name = "xmltodict", specifier = ">=1.0.2" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "django-watchfiles", specifier = ">=1.4.0" },
+    { name = "ipdb", specifier = ">=0.13.9,<0.14" },
+    { name = "ipython", specifier = ">=9.0.2,<10" },
+    { name = "uritemplate", specifier = ">=4.1.1,<5" },
+]
+test = [
+    { name = "asgiref", specifier = ">=3.4.1,<4" },
+    { name = "coverage", specifier = ">=7.6.1,<8" },
+    { name = "django-slowtests", specifier = ">=1.1.1,<2" },
+    { name = "fakeredis", specifier = ">=2.12.1,<3" },
+    { name = "govuk-bank-holidays", specifier = ">=0.15" },
+    { name = "gtfs-kit", specifier = ">=11.0.0" },
+    { name = "lxml", specifier = ">=6.0.0,<7" },
+    { name = "pyrosm", specifier = ">=0.6.2" },
+    { name = "requests-toolbelt", specifier = ">=1.0.0,<2" },
+    { name = "tblib", specifier = ">=3.0.0,<4" },
+    { name = "time-machine", specifier = ">=2.4.0,<3" },
+    { name = "vcrpy", specifier = ">=7.0.0,<8" },
 ]
 
 [[package]]

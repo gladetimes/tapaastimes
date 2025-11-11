@@ -271,7 +271,7 @@ def bus_open_data(api_key, specific_operator):
         ).exists():
             logger.warning(
                 f"""{operators} has no current data
-https://gladetimes.org/admin/busstops/service/?operator__noc__in={",".join(operators)}"""
+https://bustimes.org/admin/busstops/service/?operator__noc__in={",".join(operators)}"""
             )
 
         command.service_ids = service_ids
@@ -304,88 +304,6 @@ def ticketer(specific_operator=None):
 
     timetable_data_sources = TimetableDataSource.objects.filter(
         url__startswith="https://opendata.ticketer.com", active=True
-    )
-    if specific_operator:
-        timetable_data_sources = timetable_data_sources.filter(
-            operators=specific_operator
-        )
-        if not timetable_data_sources:
-            logger.info(f"no timetable data sources for noc {specific_operator}")
-            return
-        logger.info(timetable_data_sources)
-
-    need_to_sleep = False
-
-    for source in timetable_data_sources:
-        path = Path(source.url)
-
-        filename = f"{path.parts[3]}.zip"
-        path = base_dir / filename
-        command.source, created = DataSource.objects.get_or_create(
-            {"name": source.name}, url=source.url
-        )
-        command.source.source = source
-        command.garages = {}
-
-        if need_to_sleep:
-            sleep(2)
-            need_to_sleep = False
-
-        modified, last_modified = download_if_modified(path, command.source, session)
-
-        if (
-            specific_operator
-            or not command.source.datetime
-            or last_modified > command.source.datetime
-        ):
-            logger.info(f"{source} {last_modified}")
-
-            sha1 = get_sha1(path)
-
-            existing = DataSource.objects.filter(url__contains=".gov.uk", sha1=sha1)
-            if existing:
-                # hash matches that hash of some BODS data
-                logger.info(f"  skipping, {sha1=} matches {existing=}")
-            else:
-                command.region_id = source.region_id
-                command.service_ids = set()
-                command.route_ids = set()
-
-                # for "end date is in the past" warnings
-                command.source.datetime = timezone.now()
-
-                with log_time_taken(logger):
-                    handle_file(command, path)
-
-                    command.mark_old_services_as_not_current()
-
-                    clean_up(source, [command.source])
-
-                    command.finish_services()
-
-            command.source.sha1 = sha1
-            command.source.datetime = last_modified
-            command.source.save()
-
-            logger.info(
-                f"  {command.source.route_set.order_by('end_date').distinct('end_date').values('end_date')}"
-            )
-            logger.info(f"  {get_operator_ids(command.source)}")
-        else:
-            need_to_sleep = True
-
-def github(specific_operator=None):
-    command = get_command()
-
-    session = requests.Session()
-
-    base_dir = settings.DATA_DIR / "github"
-
-    if not base_dir.exists():
-        base_dir.mkdir()
-
-    timetable_data_sources = TimetableDataSource.objects.filter(
-        url__startswith="https://github.com", active=True
     )
     if specific_operator:
         timetable_data_sources = timetable_data_sources.filter(
@@ -550,7 +468,5 @@ class Command(BaseCommand):
             stagecoach(operator)
         elif api_key == "ticketer":
             ticketer(operator)
-        elif api_key == "github":
-            github(operator)
         else:
             bus_open_data(api_key, operator)

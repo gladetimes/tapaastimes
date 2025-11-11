@@ -1,6 +1,7 @@
 import functools
 import io
 import zipfile
+import re
 from datetime import timedelta
 
 import xmltodict
@@ -146,7 +147,7 @@ class Command(ImportLiveVehiclesCommand):
         operators = self.get_operator(operator_ref)
 
         if operator_ref == "TFLO":
-            defaults["livery_id"] = 262
+            defaults["livery_id"] = 1
             defaults["operator_id"] = operator_ref
             if vehicle_ref.startswith("TMP"):
                 defaults["notes"] = "Spare ticket machine"
@@ -154,6 +155,19 @@ class Command(ImportLiveVehiclesCommand):
             vehicles = self.vehicles.filter(
                 Q(operator__in=operators) | Q(operator=None)
             )
+        elif operator_ref in ("BNSM", "BNVB", "BNGN", "BNFM", "BNML", "BNDB"):
+            defaults["operator_id"] = operator_ref
+            normalized_ref = vehicle_ref.replace(" ", "").replace("_", "").replace("-", "")
+            is_valid_ref = (
+                re.match(r"^\d{1,5}$", normalized_ref) or
+                re.match(r"^[A-Z]{1,3}\d{1,4}[A-Z]{1,3}$", normalized_ref)
+            )
+            if not is_valid_ref:
+                defaults["notes"] = "Spare ticket machine"
+                defaults["locked"] = True
+            else:
+                defaults["livery_id"] = 3
+            vehicles = self.vehicles.filter(Q(operator__in=operators) | Q(operator=None))
         elif not operators:
             vehicles = self.vehicles.filter(operator=None)
         elif len(operators) == 1:
