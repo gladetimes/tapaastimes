@@ -159,6 +159,7 @@ def get_other_trips_in_block(trip, date):
         block=trip.block,
         route__source=trip.route.source_id,
         route__version=trip.route.version_id,
+        garage=trip.garage_id,
         operator=trip.operator_id,
     )
     if trip.route.service_id:
@@ -231,6 +232,18 @@ def get_descriptions(routes):
     )
 
     if len(origins_and_destinations) > 1:
+        # if all have the same via
+        if all(
+            len(parts) == 3 and parts[1] == origins_and_destinations[0][1]
+            for parts in origins_and_destinations
+        ):
+            # remove vias
+            origins_and_destinations = [
+                (o, d) for (o, v, d) in origins_and_destinations
+            ]
+
+        # join "Holt - Sheringham" and "Sheringham - Cromer" for example
+        # (like dominoes)
         for i, parts in enumerate(origins_and_destinations):
             for j, other_parts in enumerate(origins_and_destinations[i:]):
                 if parts[0] == other_parts[-1]:
@@ -244,6 +257,7 @@ def get_descriptions(routes):
         origins_and_destinations = list(filter(None, origins_and_destinations))
         inbound_outbound_descriptions = ()
 
+        # "or"
         if (
             len(origins_and_destinations) == 2
             and len(origins_and_destinations[0]) == 2
@@ -349,9 +363,7 @@ def get_trip(
             return
 
     if journey.code:
-        code = Q(ticket_machine_code=journey.code) | Q(
-            vehicle_journey_code=journey.code
-        )
+        code = Q(ticket_machine_code=journey.code)
     else:
         code = Q()
 

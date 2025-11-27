@@ -13,9 +13,9 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
         node-version: '20'
         cache: 'npm'
@@ -33,10 +33,10 @@ jobs:
 
   test-backend:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 8
     needs: test-frontend
     container:
-      image: ghcr.io/jclgoodwin/bustimes.org/bustimes-base:latest
+      image: ghcr.io/jclgoodwin/bustimes.org/bustimes-base:3.14
 
     permissions:
       # Gives the action the necessary permissions for publishing new
@@ -64,15 +64,15 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
-    - uses: astral-sh/setup-uv@v5
+    - uses: astral-sh/setup-uv@v7
 
-    - run: uv sync --group test
+    - run: uv sync --group test --frozen
 
     - run: rm -r busstops/static
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: dist
         path: busstops/static
@@ -81,13 +81,14 @@ jobs:
       env:
         DATABASE_URL: postgis://postgres:postgres@postgres/postgres
         SECRET_KEY: secret
-        COVERAGE_CORE: sysmon
       run: |
         uv run ./manage.py collectstatic --noinput && \
-        uv run coverage run --concurrency=multiprocessing ./manage.py test --parallel 2 --keepdb
+        uv run coverage run ./manage.py test --keepdb --durations 10
 
     - name: generate coverage report
-      run: uv run coverage combine && uv run coverage html
+      run: |
+        # uv run coverage combine && \
+        uv run coverage html
 
     - name: Coverage comment
       uses: py-cov-action/python-coverage-comment-action@v3

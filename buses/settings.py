@@ -67,14 +67,16 @@ INSTALLED_APPS = [
     "corsheaders",
     "csp",
     "turnstile",
+    "django_http_compression",
 ]
+
 
 MIDDLEWARE = [
     "busstops.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "csp.middleware.CSPMiddleware",
-    "busstops.middleware.GZipIfNotStreamingMiddleware",
+    "django_http_compression.middleware.HttpCompressionMiddleware",
     "busstops.middleware.WhiteNoiseWithFallbackMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -138,9 +140,6 @@ DATABASES["default"]["TEST"] = {"SERIALIZE": False}
 if "runserver" in sys.argv:
     # local development server - reset to the default (i.e. no persistent connections)
     del DATABASES["default"]["CONN_MAX_AGE"]
-
-TEST_RUNNER = "django_slowtests.testrunner.DiscoverSlowestTestsRunner"
-NUM_SLOW_TESTS = 10
 
 AUTH_USER_MODEL = "accounts.User"
 LOGIN_REDIRECT_URL = "/vehicles"
