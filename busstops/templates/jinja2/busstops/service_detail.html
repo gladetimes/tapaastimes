@@ -93,6 +93,7 @@
     </ul>
 {% endif %}
 
+<!-- Debug: fare_tables = {{ fare_tables|default('None') }}, type = {{ fare_tables.__class__.__name__ if fare_tables else 'None' }}, length = {{ fare_tables|length if fare_tables else 'N/A' }} -->
 {% if fare_tables %}
     <h2 id="fares"><label for="fare-tables">Fare tables</label></h2>
 

@@ -1010,47 +1010,44 @@ class ServiceDetailView(DetailView):
             .select_related("tariff", "user_profile", "sales_offer_package")
             .order_by("tariff")
         )
-        if fare_tables:
+
+        if not fare_tables:
+            return fare_tables  # Return empty queryset
+
+        for table in fare_tables:
+            table.tariff.name = (
+                table.tariff.name.removesuffix(" fares")
+                .replace(" Conc ", " Concession ")
+                .replace(" YP ", " Young Person ")
+                .replace(" Ch ", " Child ")
+                .replace("_", " ")
+                .replace(" AD ", " Adult ")
+            )
+
+        if not all(
+            table.user_profile == fare_tables[0].user_profile
+            for table in fare_tables[1:]
+        ):
             for table in fare_tables:
-                table.tariff.name = (
-                    table.tariff.name.removesuffix(" fares")
-                    .replace(" Conc ", " Concession ")
-                    .replace(" YP ", " Young Person ")
-                    .replace(" Ch ", " Child ")
-                    .replace("_", " ")
-                    .replace(" AD ", " Adult ")
-                )
+                table.tariff.name = f"{table.tariff.name} - {table.user_profile} {table.tariff.trip_type}"
+        if not all(
+            table.sales_offer_package == fare_tables[0].sales_offer_package
+            for table in fare_tables[1:]
+        ):
+            for table in fare_tables:
+                table.tariff.name = f"{table.tariff.name} - {table.sales_offer_package}"
 
-            if not all(
-                table.user_profile == fare_tables[0].user_profile
-                for table in fare_tables[1:]
+        if not all(
+            table.tariff.name == fare_tables[0].tariff.name for table in fare_tables[1:]
+        ):
+            parts = fare_tables[0].tariff.name.split()
+            while all(
+                table.tariff.name.startswith(f"{parts[0]} ") for table in fare_tables
             ):
                 for table in fare_tables:
-                    table.tariff.name = f"{table.tariff.name} - {table.user_profile} {table.tariff.trip_type}"
-            if not all(
-                table.sales_offer_package == fare_tables[0].sales_offer_package
-                for table in fare_tables[1:]
-            ):
-                for table in fare_tables:
-                    table.tariff.name = (
-                        f"{table.tariff.name} - {table.sales_offer_package}"
-                    )
-
-            if not all(
-                table.tariff.name == fare_tables[0].tariff.name
-                for table in fare_tables[1:]
-            ):
-                parts = fare_tables[0].tariff.name.split()
-                while all(
-                    table.tariff.name.startswith(f"{parts[0]} ")
-                    for table in fare_tables
-                ):
-                    for table in fare_tables:
-                        table.tariff.name = table.tariff.name.removeprefix(
-                            f"{parts[0]} "
-                        )
-                    parts = parts[1:]
-            return fare_tables
+                    table.tariff.name = table.tariff.name.removeprefix(f"{parts[0]} ")
+                parts = parts[1:]
+        return fare_tables
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1240,7 +1237,22 @@ class ServiceDetailView(DetailView):
                         }
                     )
                     break
-        context["fare_tables"] = self.get_fare_tables()
+        fare_tables = self.get_fare_tables()
+        context["fare_tables"] = fare_tables
+        # Debug: log fare_tables info
+        if not settings.TEST:
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.info(
+                f"Service {self.object.id} ({self.object}) - fare_tables: {fare_tables}, type: {type(fare_tables)}, bool: {bool(fare_tables)}"
+            )
+            if fare_tables:
+                logger.info(
+                    f"  Count: {len(fare_tables) if hasattr(fare_tables, '__len__') else 'unknown'}"
+                )
+                if hasattr(fare_tables, "count"):
+                    logger.info(f"  Queryset count: {fare_tables.count()}")
 
         for url, text in self.object.get_traveline_links(date):
             context["links"].append({"url": url, "text": text})
