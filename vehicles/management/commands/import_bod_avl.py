@@ -166,7 +166,7 @@ class Command(ImportLiveVehiclesCommand):
                 defaults["notes"] = "Spare ticket machine"
                 defaults["locked"] = True
             else:
-                defaults["livery_id"] = 3
+                defaults["livery_id"] = 2
             vehicles = self.vehicles.filter(Q(operator__in=operators) | Q(operator=None))
         elif not operators:
             vehicles = self.vehicles.filter(operator=None)

@@ -799,6 +799,14 @@ table {
     display: block;
 }
 
+#fares {
+    display: none;
+}
+
+#fares:target {
+    display: block;
+}
+
 .ad-wrapper + #map .service-map {
     margin-top: 90px;
 }

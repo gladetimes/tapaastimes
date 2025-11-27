@@ -27,7 +27,7 @@ class Command(BaseCommand):
             cursor.execute("""CREATE OR REPLACE FUNCTION notify_new_vehicle()
                            RETURNS trigger AS $$
                            BEGIN
-                           PERFORM pg_notify('new_vehicle', NEW.slug);
+                           PERFORM pg_notify('new_vehicle', NEW.slug || '|' || COALESCE(NEW.operator_id, ''));
                            RETURN NEW;
                            END;
                            $$ LANGUAGE plpgsql;""")
@@ -41,11 +41,19 @@ class Command(BaseCommand):
             for notify in gen:
                 print(notify)
 
+                payload_parts = notify.payload.split("|")
+                slug = payload_parts[0]
+                operator_id = payload_parts[1] if len(payload_parts) > 1 else ""
+
+                content = get_content(slug)
+                if operator_id == "NCTR":
+                    content += " <@1238439672708075520>"
+
                 response = session.post(
                     settings.NEW_VEHICLE_WEBHOOK_URL,
                     json={
                         "username": "bot",
-                        "content": get_content(notify.payload),
+                        "content": content,
                     },
                     timeout=10,
                 )
