@@ -70,9 +70,6 @@
     {% if object.geometry %}
         <li id="map-link"><a href="#map">Map{% if tracking_count %} (tracking {{ tracking_count }} bus{% if tracking_count != 1 %}es{% endif %}){% endif %}</a></li>
     {% endif %}
-    {% if fare_tables %}
-        <li><a href="{{ object.get_absolute_url() }}/fares">Fares</a></li>
-    {% endif %}
     {% if tickets_link %}
         <li><a href="{{ tickets_link }}">Tickets</a></li>
     {% endif %}
@@ -93,7 +90,6 @@
     </ul>
 {% endif %}
 
-<!-- Debug: fare_tables = {{ fare_tables|default('None') }}, type = {{ fare_tables.__class__.__name__ if fare_tables else 'None' }}, length = {{ fare_tables|length if fare_tables else 'N/A' }} -->
 {% if fare_tables %}
     <h2 id="fares"><label for="fare-tables">Fare tables</label></h2>
 

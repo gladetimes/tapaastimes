@@ -7,10 +7,13 @@ Usage:
 import datetime
 import logging
 import os
+import sys
 from pathlib import Path
 import re
 import zipfile
 from functools import cache
+
+from tqdm import tqdm
 
 from django.core.management.base import BaseCommand
 from django.contrib.gis.geos import Point, LineString
@@ -353,10 +356,6 @@ def get_stop_time(trip, cell, stops: dict):
         else:
             stop_time.stop = stops[atco_code]
             trip.destination = stop_time.stop
-            if trip.destination.locality and trip.destination.common_name:
-                trip.headsign = f"{trip.destination.locality.name}, {trip.destination.common_name}"
-            elif trip.destination.locality:
-                trip.headsign = trip.destination.locality.name
     else:
         # stop missing from TransXChange StopPoints - this should never happen
         try:
@@ -368,10 +367,6 @@ def get_stop_time(trip, cell, stops: dict):
         else:
             stop_time.stop = stops[atco_code]
             trip.destination = stop_time.stop
-            if trip.destination.locality and trip.destination.common_name:
-                trip.headsign = f"{trip.destination.locality.name}, {trip.destination.common_name}"
-            elif trip.destination.locality:
-                trip.headsign = trip.destination.locality.name
 
     return stop_time
 
@@ -419,6 +414,12 @@ class Command(BaseCommand):
     def add_arguments(parser):
         parser.add_argument("archives", nargs=1, type=str)
         parser.add_argument("files", nargs="*", type=str)
+        parser.add_argument(
+            "--progress",
+            action="store_true",
+            default=sys.stdout.isatty(),
+            help="Show progress bar (default: auto-detect based on terminal)",
+        )
 
     def set_up(self):
         self.calendar_cache = {}
@@ -428,6 +429,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.set_up()
+        self.show_progress = options["progress"]
 
         self.open_data_operators, self.incomplete_operators = get_open_data_operators()
 
@@ -466,21 +468,15 @@ class Command(BaseCommand):
         """
 
         operator_code = operator_element.findtext("NationalOperatorCode")
-        if not self.source.is_tnds() and not operator_code:
-            operator_code = operator_element.findtext("OperatorCode")
+        if not operator_code:
+            if not self.source.is_tnds() or self.source.name == "L":
+                operator_code = operator_element.findtext("OperatorCode")
 
         if operator_code:
-            if operator_code == "GAHL":
-                match operator_element.findtext("OperatorCode"):
-                    case "LC":
-                        operator_code = "LONC"
-                    case "LG":
-                        operator_code = "LGEN"
-                    case "BE":
-                        operator_code = "BTRI"
-
-            operator = get_operator_by("National Operator Codes", operator_code)
-            if operator:
+            if self.source.name == "L" and len(operator_code) == 2:
+                if operator := get_operator_by("L", operator_code):
+                    return operator
+            elif operator := get_operator_by("National Operator Codes", operator_code):
                 return operator
 
         licence_number = operator_element.findtext("LicenceNumber")
@@ -523,6 +519,7 @@ class Command(BaseCommand):
         operators = transxchange.operators
 
         if len(operators) > 1:
+            # if more than one operator listed, which ones listed actually operate any journeys?
             journey_operators = {
                 journey.operator
                 for journey in transxchange.journeys
@@ -600,7 +597,11 @@ class Command(BaseCommand):
             with zipfile.ZipFile(archive_path) as archive:
                 namelist = archive.namelist()
 
-                for filename in filenames or namelist:
+                items = filenames or namelist
+                if self.show_progress:
+                    items = tqdm(items, desc=basename)
+
+                for filename in items:
                     if filename.startswith("__MACOSX"):
                         continue
 
@@ -610,7 +611,7 @@ class Command(BaseCommand):
                     if filename.endswith(".xml"):
                         with archive.open(filename) as open_file:
                             self.handle_file(open_file, filename)
-        except zipfile.BadZipfile:
+        except zipfile.BadZipFile:
             with archive_path.open() as open_file:
                 self.handle_file(open_file, str(archive_path))
 
@@ -1144,16 +1145,18 @@ class Command(BaseCommand):
 
             if operators:
                 q = Q(operator__in=operators.values())
+                # prevent certain seemingly-the-same services being merged
                 if (
                     description
                     and self.source.name.startswith("Stagecoach")
                     and (
                         line.line_name == "1"
                         and "Chester" in description
-                        or line.line_name == "59"
-                        and self.source.name == "Stagecoach East Scotland"
+                        or (
+                            line.line_name == "59"
+                            and self.source.name == "Stagecoach East Scotland"
+                        )
                         or line.line_name == "700"
-                        and "Stagecoach" in self.source.name
                     )
                 ):
                     q = (Q(source=self.source) | q) & Q(description=description)
@@ -1193,18 +1196,27 @@ class Command(BaseCommand):
                 if service_code is None:
                     service_code = txc_service.service_code
 
-                if service_code[:4] == "tfl_":
-                    # London: assume line_name is unique within region:
-                    existing = self.source.service_set.filter(
-                        Q(service_code=service_code)
-                        | Q(line_name__iexact=line.line_name)
-                    ).first()
-                elif not existing:
-                    # assume service code is at least unique within a TNDS region:
-                    existing = self.source.service_set.filter(
-                        Q(service_code=service_code, operator__in=operators.values())
-                        | Q(description=description, line_name__iexact=line.line_name)
-                    ).first()
+                if not existing:
+                    if service_code[:4] == "tfl_":
+                        existing = self.source.service_set.filter(
+                            Q(service_code=service_code)
+                            | Q(line_name__iexact=line.line_name)
+                            & (
+                                Q(description=description)
+                                | Q(operator__in=operators.values())
+                            )
+                        ).first()
+                    else:
+                        existing = self.source.service_set.filter(
+                            Q(
+                                service_code=service_code,
+                                operator__in=operators.values(),
+                            )
+                            | Q(
+                                description=description,
+                                line_name__iexact=line.line_name,
+                            )
+                        ).first()
             elif unique_service_code:
                 service_code = unique_service_code
 
@@ -1263,7 +1275,7 @@ class Command(BaseCommand):
                 )
             elif service_code and service.mode == "bus" and service_code[:4] == "tfl_":
                 # London bus red
-                service.colour_id = 26
+                service.colour_id = 5
             else:
                 # use the operator's colour
                 for operator in operators.values():
@@ -1446,6 +1458,16 @@ class Command(BaseCommand):
                     logger.warning(
                         f"{filename} has {operators} but unexpected filename format"
                     )
+            # detect TransMach data too, and do likewise
+            elif "_" in route_code and route_code.endswith(".xml"):
+                parts = route_code.split("_")
+                if (
+                    len(parts) == 2
+                    and parts[1][:-4].isdigit()
+                    and parts[0] == line.line_name.upper()
+                ):
+                    route_defaults["revision_number_context"] = parts[0]
+                    logger.info(f"{filename} looks like TransMach")
 
             route, route_created = Route.objects.update_or_create(
                 route_defaults, source=self.source, code=route_code

@@ -460,6 +460,12 @@ class VehicleCode(models.Model):
         return f"{self.scheme} {self.code}"
 
     class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["code", "scheme"],
+                name="unique_vehicle_code",
+            ),
+        ]
         indexes = [models.Index(fields=("code", "scheme"))]
 
 
@@ -842,3 +848,6 @@ class SiriSubscription(models.Model):
 
     def get_status_key(self):
         return f"{self.name.replace(' ', '_')}_status"
+
+    def get_absolute_url(self):
+        return reverse("siri_post", args=(self.uuid,))

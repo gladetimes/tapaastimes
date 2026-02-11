@@ -30,7 +30,6 @@ PASSWORD=$2
 
 
 ./manage.py nptg_new
-./manage.py nptg_new "data/IrishNPTG/NPTG.xml"
 ./manage.py naptan_new
 ./manage.py naptan_new "Irish NaPTAN"
 

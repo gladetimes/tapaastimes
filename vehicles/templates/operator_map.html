@@ -1,9 +1,9 @@
 {% extends 'map.html' %}
 
-{% block title %}Bus tracker map – {{ object }} – bustimes.org{% endblock %}
+{% block title %}Bus tracker map – {{ object }} – gladetimes{% endblock %}
 
 {% block canonical %}
-    <link rel="canonical" href="https://bustimes.org{{ object.get_absolute_url }}/map">
+    <link rel="canonical" href="https://gladetimes{{ object.get_absolute_url }}/map">
 {% endblock canonical %}
 
 {% load static %}
@@ -11,7 +11,7 @@
 {% block head %}
     <meta property="og:title" content="Map – {{ object }}">
     <link rel="stylesheet" href="{% static 'dist/js/app.css' %}">
-    <link rel="stylesheet" href="/liveries.{{ liveries_css_version }}.css">
+    <link rel="stylesheet" media="print" href="/liveries.{{ liveries_css_version }}.css" onload="this.onload=null;this.removeAttribute('media')">
 {% endblock head %}
 
 {% block footer %}

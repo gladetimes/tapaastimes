@@ -1,7 +1,0 @@
-tunnel: 2fe4187a-07ca-4a03-bfa7-0450fecf86cc
-credentials-file: /root/.cloudflared/2fe4187a-07ca-4a03-bfa7-0450fecf86cc.json
-
-ingress:
-  - hostname: status.midlandbus.uk
-    service: http://localhost:3010
-  - service: http_status:404

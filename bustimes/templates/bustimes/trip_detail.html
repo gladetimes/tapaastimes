@@ -1,6 +1,6 @@
 {% extends 'map.html' %}
 
-{% block title %}{{ object.route.line_name }} – {{ object.operator }} – bustimes.org{% endblock %}
+{% block title %}{{ object.route.line_name }} – {{ object.operator }} – gladetimes{% endblock %}
 
 {% block canonical %}<meta name="robots" content="noindex,noarchive">{% endblock %}
 
@@ -8,7 +8,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'dist/js/app.css' %}">
-    <link rel="stylesheet" href="/liveries.{{ liveries_css_version }}.css">
+    <link rel="stylesheet" media="print" href="/liveries.{{ liveries_css_version }}.css" onload="this.onload=null;this.removeAttribute('media')">
 {% endblock head %}
 
 {% block footer %}

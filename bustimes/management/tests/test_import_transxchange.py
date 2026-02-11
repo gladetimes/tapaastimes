@@ -68,13 +68,13 @@ class ImportTransXChangeTest(TestCase):
         )
 
         cls.nocs = DataSource.objects.create(name="National Operator Codes")
+        london = DataSource.objects.create(name="L")
         OperatorCode.objects.create(operator=cls.megabus, source=cls.nocs, code="MEGA")
         OperatorCode.objects.create(operator=cls.fabd, source=cls.nocs, code="FABD")
         OperatorCode.objects.create(operator=cls.fabd, source=cls.nocs, code="SDVN")
         OperatorCode.objects.create(operator=cls.fabd, source=cls.nocs, code="CBNL")
-        OperatorCode.objects.create(operator=cls.fabd, source=cls.nocs, code="BTRI")
-        OperatorCode.objects.create(operator=cls.fabd, source=cls.nocs, code="LONC")
-        OperatorCode.objects.create(operator=cls.fabd, source=cls.nocs, code="LGEN")
+        OperatorCode.objects.create(operator=cls.fabd, source=london, code="LC")
+        OperatorCode.objects.create(operator=cls.fabd, source=london, code="BE")
 
         StopPoint.objects.bulk_create(
             StopPoint(
@@ -1047,7 +1047,7 @@ class ImportTransXChangeTest(TestCase):
             "Glossop - Piccadilly Gardens, Manchester City Centre or Ashton Under Lyne",
         )
 
-        with time_machine.travel("1 October 2017"), self.assertNumQueries(10):
+        with time_machine.travel("1 October 2017"), self.assertNumQueries(9):
             timetable = service.get_timetable(date(2017, 10, 3)).render()
         self.assertEqual(str(timetable.date), "2017-10-03")
         self.assertEqual(27, len(timetable.groupings[1].trips))
@@ -1346,8 +1346,8 @@ class ImportTransXChangeTest(TestCase):
 
         service = Service.objects.get()
         response = self.client.get(service.get_absolute_url())
-        self.assertContains(response, '<td>08:00<abbr title="set down only">s</abbr>')
-        self.assertContains(response, '<td>08:26<abbr title="pick up only">p</abbr>')
+        self.assertContains(response, '<abbr title="set down only">s</abbr>')
+        self.assertContains(response, '<abbr title="pick up only">p</abbr>')
 
     @time_machine.travel("2023-07-20")
     def test_stop_usage_notes(self):
@@ -1357,9 +1357,7 @@ class ImportTransXChangeTest(TestCase):
         service = Service.objects.get()
         response = self.client.get(service.get_absolute_url())
 
-        self.assertContains(
-            response, '<td>18:07<abbr title="set down only">s</abbr></td>'
-        )
+        self.assertContains(response, '<abbr title="set down only">s</abbr>')
         self.assertContains(response, "<strong>Sch</strong> Schooldays Only")
         self.assertContains(response, "<td>07:56<strong>Sch</strong></td>")
 
@@ -1420,10 +1418,10 @@ class ImportTransXChangeTest(TestCase):
         )
         self.assertEqual(2, len(command.missing_operators))
 
+        command.source.name = "L"
         element = ET.fromstring(
             """
     <Operator id="OId_BE">
-      <NationalOperatorCode>GAHL</NationalOperatorCode>
       <OperatorCode>BE</OperatorCode>
       <OperatorShortName>BLUE TRIANGLE BUSES LIM</OperatorShortName>
       <OperatorNameOnLicence>BLUE TRIANGLE BUSES LIMITED</OperatorNameOnLicence>
@@ -1437,9 +1435,6 @@ class ImportTransXChangeTest(TestCase):
         self.assertIsNone(command.get_operator(element))
 
         element.find("OperatorCode").text = "LC"
-        self.assertEqual(self.fabd, command.get_operator(element))
-
-        element.find("OperatorCode").text = "LG"
         self.assertEqual(self.fabd, command.get_operator(element))
 
     def test_get_registration(self):

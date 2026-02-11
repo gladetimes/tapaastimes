@@ -1,7 +1,7 @@
 {% extends 'page.html' %}
 
 {% block canonical %}
-    <link rel="canonical" href="https://bustimes.org">
+    <link rel="canonical" href="https://gladetimes">
 {% endblock canonical %}
 
 {% block bodyclass %}narrow{% endblock %}
@@ -90,9 +90,15 @@
         </ul>
     </li>
     {% endif %}
-    <li><a href="/regions/IM">Isle of Man</a></li>
-    <li><a href="/regions/GG">Guernsey</a></li>
+    <!-- <li><a href="/regions/IM">Isle of Man</a></li> -->
+    <!-- <li><a href="/regions/GG">Guernsey</a></li> -->
     <li><a href="/regions/JE">Jersey</a></li>
 </ul>
+
+{% if popular_services %}
+    <h2>Popular pages</h2>
+
+    {% include 'service_list.html' with services=popular_services class="has-smalls" %}
+{% endif %}
 
 {% endblock content %}

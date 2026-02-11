@@ -18,14 +18,6 @@ def download(path, url, session=None):
     write_file(path, response)
 
 
-def download_with_headers(path, url, headers=None, session=None):
-    """Download a file with custom headers (e.g., for API authentication)"""
-    response = (session or requests).get(url, headers=headers, stream=True, timeout=61)
-    response.raise_for_status()
-    write_file(path, response)
-    return True  # Always return True since we don't have modification checking for API downloads
-
-
 def download_if_modified(path, source, session=None):
     headers = {"User-Agent": "bustimes.org"}
     if source.last_modified:

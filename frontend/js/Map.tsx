@@ -1,4 +1,4 @@
-import { captureException } from "@sentry/react";
+import { ErrorBoundary, captureException } from "@sentry/react";
 import React, { memo, useEffect, createContext } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -27,6 +27,7 @@ import type {
   Map as MapLibreMap,
   MapStyleImageMissingEvent,
 } from "maplibre-gl";
+import { ErrorFallback } from "./LoadingSorry";
 
 const imagesByName: { [imageName: string]: string } = {
   "stop-marker": stopMarker,
@@ -214,11 +215,11 @@ export default function BusTimesMap(
     );
   }, [mapStyle, darkModeQuery.matches]);
 
-  let mapStyleURL = `https://tiles.stadiamaps.com/styles/${mapStyle}.json`;
+  let mapStyleURL = `https://maps.fluffynet.dev/styles/dark/style.json`;
   if (mapStyle === "os_light") {
-    mapStyleURL = "https://tiles.bustimes.org.uk/styles/light/style.json";
+    mapStyleURL = "https://maps.fluffynet.dev/styles/light/style.json";
   } else if (mapStyle === "os_dark") {
-    mapStyleURL = "https://tiles.bustimes.org.uk/styles/night/style.json";
+    mapStyleURL = "https://maps.fluffynet.dev/styles/dark/style.json";
   } else if (mapStyle === "osm_bright") {
     mapStyleURL = osmBright;
     // } else if (mapStyle === "aws" || mapStyle === "aws_satellite") {
@@ -236,54 +237,56 @@ export default function BusTimesMap(
   }
 
   return (
-    <ThemeContext.Provider value={mapStyle}>
-      <MapGL
-        {...props}
-        reuseMaps
-        crossSourceCollisions={false}
-        touchPitch={false}
-        pitchWithRotate={false}
-        dragRotate={false}
-        minZoom={4}
-        maxZoom={18}
-        projection="globe"
-        mapStyle={mapStyleURL}
-        RTLTextPlugin={""}
-        attributionControl={false}
-        onError={(e) => captureException(e.error)}
-        onContextMenu={onContextMenu}
-      >
-        <NavigationControl showCompass={false} />
-        <GeolocateControl trackUserLocation />
-        <StyleSwitcherControl
-          style={mapStyle}
-          onChange={handleMapStyleChange}
-        />
-        <AttributionControl />
-        <MapChild onInit={props.onMapInit} />
+    <ErrorBoundary fallback={ErrorFallback}>
+      <ThemeContext.Provider value={mapStyle}>
+        <MapGL
+          {...props}
+          // reuseMaps
+          crossSourceCollisions={false}
+          touchPitch={false}
+          pitchWithRotate={false}
+          dragRotate={false}
+          minZoom={4}
+          maxZoom={18}
+          projection="globe"
+          mapStyle={mapStyleURL}
+          RTLTextPlugin={""}
+          attributionControl={false}
+          // onError={(e) => captureException(e)}
+          onContextMenu={onContextMenu}
+        >
+          <NavigationControl showCompass={false} />
+          <GeolocateControl trackUserLocation />
+          <StyleSwitcherControl
+            style={mapStyle}
+            onChange={handleMapStyleChange}
+          />
+          <AttributionControl />
+          <MapChild onInit={props.onMapInit} />
 
-        {props.children}
-        {contextMenu ? (
-          <Popup
-            longitude={contextMenu.lng}
-            latitude={contextMenu.lat}
-            onClose={onContextMenu}
-          >
-            <a
-              href={`https://www.openstreetmap.org/#map=15/${contextMenu.lat}/${contextMenu.lng}`}
-              rel="noopener noreferrer"
+          {props.children}
+          {contextMenu ? (
+            <Popup
+              longitude={contextMenu.lng}
+              latitude={contextMenu.lat}
+              onClose={onContextMenu}
             >
-              OpenStreetMap
-            </a>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${contextMenu.lat},${contextMenu.lng}`}
-              rel="noopener noreferrer"
-            >
-              Google Maps
-            </a>
-          </Popup>
-        ) : null}
-      </MapGL>
-    </ThemeContext.Provider>
+              <a
+                href={`https://www.openstreetmap.org/#map=15/${contextMenu.lat}/${contextMenu.lng}`}
+                rel="noopener noreferrer"
+              >
+                OpenStreetMap
+              </a>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${contextMenu.lat},${contextMenu.lng}`}
+                rel="noopener noreferrer"
+              >
+                Google Maps
+              </a>
+            </Popup>
+          ) : null}
+        </MapGL>
+      </ThemeContext.Provider>
+    </ErrorBoundary>
   );
 }

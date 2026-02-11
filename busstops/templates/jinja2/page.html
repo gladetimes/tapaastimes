@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#ffff9e" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
 {% block canonical %}
-    <link rel="canonical" href="https://bustimes.org{{ object.get_absolute_url() }}">
+    <link rel="canonical" href="https://gladetimes{{ object.get_absolute_url() }}">
 {% endblock canonical %}
 <script type="application/ld+json">{"@context":"http://schema.org","@type":"WebSite","url":"https://bustimes.org","name":"bustimes.org","potentialAction":{"@type":"SearchAction","target":"https://bustimes.org/search?q={q}","query-input":"required name=q"}}</script>
 <link rel="icon" sizes="48x48" type="image/png" href="/favicon.ico">
@@ -27,7 +27,7 @@
 {% endif %}
 {% endblock fuse %}
 
-<script async data-domain="bustimes.org" src="https://plausible.bustimes.org.uk/js/script.js" integrity="sha512-pwz0jEtHLSZFRYQLWSIRmrixUj8pWQXISE+MHDbqS5U8b01b9gW8ZAOQo1Wi5aPpcgH8x9qYjxaKVPiOWJ9waw==" crossorigin="anonymous"></script>
+<script async src="https://umami.bustimes.org.uk/script.js" data-website-id="62fea6ac-a287-4ede-962b-5cf0029a8a7b" data-exclude-hash="true"></script>
 
 </head>
 <body class="{% block bodyclass %}wide{% endblock %}{% if ad is false %} no-ads{% endif %}">
@@ -79,7 +79,7 @@
     <ul>
         <li><a href="/contact">Contact</a></li>
         <li><a href="/data">Data sources</a></li>
-        <li><a href="https://status.bustimes.org">Status</a></li>
+        <li><a href="https://status.gladetimes">Status</a></li>
         <li><a href="/privacy">Privacy policy</a></li>
         {% if ad %}<li><a href="javascript:window.__tcfapi('displayConsentUi',2,function(){})">Privacy settings</a></li>{% endif %}
     </ul>

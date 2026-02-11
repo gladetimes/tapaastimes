@@ -212,27 +212,6 @@ class Timetable:
         if len(self.current_routes) > 1:
             self.correct_directions(trips)
 
-        # FlixBus: try to work out direction (inbound/outbound) using shape or destination
-        source = self.current_routes and self.current_routes[0].source
-        if (
-            source
-            and source.name == "FlixBus"
-            and not any(trip.inbound for trip in trips)
-        ):
-            journey_patterns = set(trip.journey_pattern for trip in trips)
-            if len(journey_patterns) == 2:
-                inbound_pattern = journey_patterns.pop()
-                for trip in trips:
-                    if trip.journey_pattern == inbound_pattern:
-                        trip.inbound = True
-            else:
-                destinations = set(trip.destination_id for trip in trips)
-                if len(destinations) == 2:
-                    inbound_destination = destinations.pop()
-                    for trip in trips:
-                        if trip.destination_id == inbound_destination:
-                            trip.inbound = True
-
         for trip in trips:
             # split inbound and outbound trips into lists
             if trip.inbound:
@@ -537,6 +516,10 @@ class Grouping:
             f"{str(row.stop):<{width}}  {'  '.join(str(time) or '     ' for time in row.times)}"
             for row in self.rows
         )
+
+    @cached_property
+    def has_notes_column(self):
+        return any(row.pick_up_only or row.set_down_only for row in self.rows)
 
     def has_minor_stops(self):
         return any(row.is_minor() for row in self.rows)
@@ -953,6 +936,14 @@ class Row:
                 return True
 
     @cached_property
+    def set_down_only(self):
+        return all(cell.set_down_only() for cell in self.times if type(cell) is Cell)
+
+    @cached_property
+    def pick_up_only(self):
+        return all(cell.pick_up_only() for cell in self.times if type(cell) is Cell)
+
+    @cached_property
     def od(self):
         """is the origin or destination of any trip"""
         return any(cell.first or cell.last for cell in self.times if type(cell) is Cell)
@@ -990,10 +981,10 @@ class Cell:
         return self.stoptime.departure_or_arrival()
 
     def __repr__(self):
-        return format_timedelta(self.arrival)
+        return format_timedelta(self.arrival, plus_one=True)
 
     def departure_time(self):
-        return format_timedelta(self.departure)
+        return format_timedelta(self.departure, plus_one=True)
 
     def set_down_only(self):
         if not self.last:

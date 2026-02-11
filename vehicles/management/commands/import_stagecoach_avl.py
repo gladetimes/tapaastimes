@@ -111,7 +111,7 @@ class Command(ImportLiveVehiclesCommand):
         if vehicle or item.get("hg") == "0":
             return vehicle, False
 
-        return Vehicle.objects.get_or_create(
+        return Vehicle.objects.filter(operator__in=self.operators).get_or_create(
             {"operator": operator, "source": self.source, "fleet_code": vehicle_code},
             code=vehicle_code,
         )
@@ -169,8 +169,11 @@ class Command(ImportLiveVehiclesCommand):
                 print(journey.route_name, item.get("or"), vehicle.get_absolute_url())
 
         if departure_time and journey.service and not journey.id:
+            journey.direction = item["dn"].lower()
             journey.trip = journey.get_trip(
-                destination_ref=item.get("fr"), departure_time=departure_time
+                destination_ref=item.get("fr"),
+                origin_ref=item.get("or"),
+                departure_time=departure_time,
             )
 
         return journey

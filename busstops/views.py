@@ -95,6 +95,12 @@ def flixbus_affiliate_link(**kwargs) -> str:
     return f"https://www.awin1.com/cread.php?{urlencode(query)}"
 
 
+def flibco_affiliate_link(
+    ued="https://www.flibco.com/en/shuttle/bus-coach-london-stansted-airport", **kwargs
+):
+    return flixbus_affiliate_link(awinmid=53945, ued=ued, **kwargs)
+
+
 def index(request):
     def stats():
         return {
@@ -106,9 +112,10 @@ def index(request):
             .count(),
         }
 
-    context = {
-        "stats": stats,
-    }
+    context = {"stats": stats, "popular_services": cache.get("popular_services")}
+
+    if context["popular_services"]:
+        context["colours"] = get_colours(context["popular_services"])
 
     return render(request, "index.html", context)
 
@@ -277,7 +284,8 @@ def status(request):
         "bod_avl_status": {},
     }
 
-    for key in ("bod_avl_status", "Transport_for_Wales_status", "Bus_Open_Data_status"):
+    for key in ("bod_avl", "Transport_for_Wales", "Bus_Open_Data", "Todd's_Travel"):
+        key = f"{key}_status"
         if status := cache.get(key):
             context["bod_avl_status"][key] = status
 
@@ -716,6 +724,7 @@ class StopPointDetailView(DetailView):
                 current=True,
             )
             .distinct()
+            .order_by("publication_window")
             .prefetch_related(
                 Prefetch(
                     "consequence_set", queryset=consequences, to_attr="consequences"
@@ -824,6 +833,7 @@ class OperatorDetailView(DetailView):
                 consequence__operators=self.object,
                 current=True,
             )
+            .order_by("publication_window")
             .distinct()
             .prefetch_related(
                 Prefetch(
@@ -883,6 +893,8 @@ class OperatorDetailView(DetailView):
                 clickref="ot",
                 ued="https://www.flixbus.co.uk/bus-routes/london-london-stansted-airport",
             )
+        elif self.object.name == "Flibco":
+            context["tickets_link"] = flibco_affiliate_link(clickref="ot")
         elif self.object.name == "National Express":
             context["tickets_link"] = (
                 "https://nationalexpress.prf.hn/click/camref:1011ljPYw"
@@ -1010,44 +1022,47 @@ class ServiceDetailView(DetailView):
             .select_related("tariff", "user_profile", "sales_offer_package")
             .order_by("tariff")
         )
-
-        if not fare_tables:
-            return fare_tables  # Return empty queryset
-
-        for table in fare_tables:
-            table.tariff.name = (
-                table.tariff.name.removesuffix(" fares")
-                .replace(" Conc ", " Concession ")
-                .replace(" YP ", " Young Person ")
-                .replace(" Ch ", " Child ")
-                .replace("_", " ")
-                .replace(" AD ", " Adult ")
-            )
-
-        if not all(
-            table.user_profile == fare_tables[0].user_profile
-            for table in fare_tables[1:]
-        ):
+        if fare_tables:
             for table in fare_tables:
-                table.tariff.name = f"{table.tariff.name} - {table.user_profile} {table.tariff.trip_type}"
-        if not all(
-            table.sales_offer_package == fare_tables[0].sales_offer_package
-            for table in fare_tables[1:]
-        ):
-            for table in fare_tables:
-                table.tariff.name = f"{table.tariff.name} - {table.sales_offer_package}"
+                table.tariff.name = (
+                    table.tariff.name.removesuffix(" fares")
+                    .replace(" Conc ", " Concession ")
+                    .replace(" YP ", " Young Person ")
+                    .replace(" Ch ", " Child ")
+                    .replace("_", " ")
+                    .replace(" AD ", " Adult ")
+                )
 
-        if not all(
-            table.tariff.name == fare_tables[0].tariff.name for table in fare_tables[1:]
-        ):
-            parts = fare_tables[0].tariff.name.split()
-            while all(
-                table.tariff.name.startswith(f"{parts[0]} ") for table in fare_tables
+            if not all(
+                table.user_profile == fare_tables[0].user_profile
+                for table in fare_tables[1:]
             ):
                 for table in fare_tables:
-                    table.tariff.name = table.tariff.name.removeprefix(f"{parts[0]} ")
-                parts = parts[1:]
-        return fare_tables
+                    table.tariff.name = f"{table.tariff.name} - {table.user_profile} {table.tariff.trip_type}"
+            if not all(
+                table.sales_offer_package == fare_tables[0].sales_offer_package
+                for table in fare_tables[1:]
+            ):
+                for table in fare_tables:
+                    table.tariff.name = (
+                        f"{table.tariff.name} - {table.sales_offer_package}"
+                    )
+
+            if not all(
+                table.tariff.name == fare_tables[0].tariff.name
+                for table in fare_tables[1:]
+            ):
+                parts = fare_tables[0].tariff.name.split()
+                while all(
+                    table.tariff.name.startswith(f"{parts[0]} ")
+                    for table in fare_tables
+                ):
+                    for table in fare_tables:
+                        table.tariff.name = table.tariff.name.removeprefix(
+                            f"{parts[0]} "
+                        )
+                    parts = parts[1:]
+            return fare_tables
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1097,6 +1112,7 @@ class ServiceDetailView(DetailView):
                         and context["timetable"].calendar_ids
                     )
                     and date < timezone.localdate()
+                    and not form.cleaned_data["detailed"]
                 ):
                     return {"redirect_to": self.object}
 
@@ -1122,6 +1138,7 @@ class ServiceDetailView(DetailView):
                 publication_window__contains=Now(),
                 current=True,
             )
+            .order_by("publication_window")
             .prefetch_related(
                 Prefetch(
                     "consequence_set",
@@ -1218,6 +1235,15 @@ class ServiceDetailView(DetailView):
                         }
                     )
                     break
+                elif operator.name == "Flibco":
+                    context["tickets_link"] = flibco_affiliate_link()
+                    context["links"].append(
+                        {
+                            "url": context["tickets_link"],
+                            "text": "Buy tickets at Flibco",
+                        }
+                    )
+                    break
                 elif (
                     operator.name == "FlixBus"
                     or self.object.service_code == "PF0000508:488"
@@ -1237,22 +1263,7 @@ class ServiceDetailView(DetailView):
                         }
                     )
                     break
-        fare_tables = self.get_fare_tables()
-        context["fare_tables"] = fare_tables
-        # Debug: log fare_tables info
-        if not settings.TEST:
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.info(
-                f"Service {self.object.id} ({self.object}) - fare_tables: {fare_tables}, type: {type(fare_tables)}, bool: {bool(fare_tables)}"
-            )
-            if fare_tables:
-                logger.info(
-                    f"  Count: {len(fare_tables) if hasattr(fare_tables, '__len__') else 'unknown'}"
-                )
-                if hasattr(fare_tables, "count"):
-                    logger.info(f"  Queryset count: {fare_tables.count()}")
+        context["fare_tables"] = self.get_fare_tables()
 
         for url, text in self.object.get_traveline_links(date):
             context["links"].append({"url": url, "text": text})
@@ -1266,7 +1277,7 @@ class ServiceDetailView(DetailView):
                 permanent=(type(context["redirect_to"]) is self.model),
             )
 
-        if not settings.TEST:
+        if not (settings.TEST or "debug-toolbar" in self.request.GET):
             template = get_template("busstops/service_detail.html")
             generator = template.template.generate(
                 **context, ad=True, request=self.request

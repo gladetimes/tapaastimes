@@ -113,6 +113,7 @@ class ImportBusOpenDataTest(TestCase):
         with (
             TemporaryDirectory() as directory,
             override_settings(DATA_DIR=Path(directory)),
+            patch("busstops.models.DataSource.upload_to_s3_etc") as upload_to_s3_etc,
         ):
             api_key = "0123456789abc19abc190123456789abc19abc19"
 
@@ -132,6 +133,10 @@ class ImportBusOpenDataTest(TestCase):
             response = self.client.get(route.get_absolute_url())
             self.assertEqual(200, response.status_code)
             self.client.logout()
+
+        upload_to_s3_etc.assert_called_once_with(
+            Path(directory) / f"bod/{route.source_id}"
+        )
 
         self.assertEqual(route.source.name, "Lynx_Clenchwarton_54_20200330")
         self.assertEqual(
@@ -166,6 +171,7 @@ class ImportBusOpenDataTest(TestCase):
                 <th class="stop-name" scope="row">
                     <a href="/stops/2900w0321">Lion Store (opp)</a>
                 </th>
+                <td></td>
                 <td>12:19</td>
             </tr>""",
             html=True,
@@ -384,7 +390,12 @@ Lynx/Bus Open Data Service (BODS)</a>, <time datetime="2020-04-01">1 April 2020<
             TemporaryDirectory() as directory,
             override_settings(DATA_DIR=Path(directory)),
         ):
-            with use_cassette(str(FIXTURES_DIR / "bod_ticketer.yaml")):
+            with (
+                use_cassette(str(FIXTURES_DIR / "bod_ticketer.yaml")),
+                patch(
+                    "busstops.models.DataSource.upload_to_s3_etc"
+                ) as upload_to_s3_etc,
+            ):
                 with self.assertLogs(
                     "bustimes.management.commands.import_transxchange", "WARNING"
                 ) as cm:
@@ -397,6 +408,8 @@ Lynx/Bus Open Data Service (BODS)</a>, <time datetime="2020-04-01">1 April 2020<
                     call_command(
                         "import_bod_timetables", "ticketer", "POOP"
                     )  # no matching operator
+
+            upload_to_s3_etc.assert_called_once()
 
             source = DataSource.objects.get(name="Completely Coach Travel")
             service = source.service_set.first()
@@ -485,7 +498,7 @@ Lynx/Bus Open Data Service (BODS)</a>, <time datetime="2020-04-01">1 April 2020<
                 "bustimes.management.commands.import_bod_timetables.download_if_modified",
                 return_value=(True, parse_datetime("2020-06-10T12:00:00+01:00")),
             ) as download_if_modified:
-                with self.assertNumQueries(114):
+                with self.assertNumQueries(115):
                     call_command("import_bod_timetables", "stagecoach")
                 download_if_modified.assert_called_with(
                     path, DataSource.objects.get(name="Stagecoach East"), ANY
@@ -499,13 +512,13 @@ Lynx/Bus Open Data Service (BODS)</a>, <time datetime="2020-04-01">1 April 2020<
                 )
                 route_link.save()
 
-                with self.assertNumQueries(5):
+                with self.assertNumQueries(6):
                     call_command("import_bod_timetables", "stagecoach")
 
                 with self.assertNumQueries(1):
                     call_command("import_bod_timetables", "stagecoach", "SCOX")
 
-                with self.assertNumQueries(120):
+                with self.assertNumQueries(121):
                     call_command("import_bod_timetables", "stagecoach", "SCCM")
 
                 route_link.refresh_from_db()

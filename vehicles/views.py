@@ -10,12 +10,12 @@ from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSException, Point
-from django.contrib.postgres.aggregates import StringAgg
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
 from django.db import IntegrityError, OperationalError, connection, transaction
-from django.db.models import Case, F, Max, OuterRef, Q, When
+from django.db.models import Case, F, Max, OuterRef, Q, When, Value
+from django.db.models.aggregates import StringAgg
 from django.db.models.functions import Coalesce, Now
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -132,7 +132,7 @@ def liveries_css(request, version=0):
 
 
 features_string_agg = StringAgg(
-    "features__name", ", ", order_by=["features__name"], default=""
+    "features__name", Value(", "), order_by=["features__name"], default=""
 )
 
 
@@ -645,6 +645,9 @@ def service_vehicles_history(request, slug=None, noc=None, line_name=None):
     context = journeys_list(
         request, journeys.select_related("vehicle"), service=service
     )
+
+    if not context:
+        raise Http404
 
     if service:
         context["garages"] = Garage.objects.filter(
@@ -1237,7 +1240,24 @@ def siri_post(request, uuid):
 
     cache.set(last_post_key, {"headers": request.headers, "body": body}, None)
 
-    return HttpResponse("")
+    return HttpResponse(
+        xmltodict.unparse(
+            {
+                "Siri": {
+                    "@xmlns": "http://www.siri.org.uk/siri",
+                    "@version": "2.0",
+                    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                    "@xsi:schemaLocation": "http://www.siri.org.uk/siri http://www.siri.org.uk/schema/2.0/xsd/siri.xsd",
+                    "DataReceivedAcknowledgement": {
+                        "ResponseTimestamp": timezone.now().isoformat(),
+                        "ConsumerRef": subscription.requestor_ref,
+                        "Status": True,
+                    },
+                }
+            }
+        ),
+        content_type="application/xml",
+    )
 
 
 @csrf_exempt

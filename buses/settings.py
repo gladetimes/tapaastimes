@@ -8,7 +8,6 @@ from warnings import filterwarnings
 import dj_database_url
 import sentry_sdk
 
-# from csp.constants import SELF, NONE
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.huey import HueyIntegration
 from sentry_sdk.integrations.logging import ignore_logger
@@ -20,7 +19,7 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split()
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://gladetimes",
+    "https://gladetimes.midlandbus.org",
 ).split()
 CSRF_FAILURE_VIEW = "busstops.views.csrf_failure"
 
@@ -28,7 +27,7 @@ TEST = "test" in sys.argv or "pytest" in sys.argv[0]
 DEBUG = bool(os.environ.get("DEBUG", False))
 DEBUG = False
 
-DEFAULT_FROM_EMAIL = '"gladetimes" <gladetimes@gladetimes>'
+DEFAULT_FROM_EMAIL = '"bustimes.org" <bustimes.org@bustimes.org>'
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
@@ -65,7 +64,6 @@ INSTALLED_APPS = [
     "simple_history",
     "huey.contrib.djhuey",
     "corsheaders",
-    "csp",
     "turnstile",
     "django_http_compression",
 ]
@@ -75,7 +73,7 @@ MIDDLEWARE = [
     "busstops.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "csp.middleware.CSPMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "django_http_compression.middleware.HttpCompressionMiddleware",
     "busstops.middleware.WhiteNoiseWithFallbackMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -96,13 +94,8 @@ SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_REDIRECT_EXEMPT = [r"^version$"]
 
-CONTENT_SECURITY_POLICY = {
-    "DIRECTIVES": {
-        "default-src": None,
-        # "font-src": [SELF],
-        # "media-src": [NONE],
-        "upgrade-insecure-requests": True,
-    },
+SECURE_CSP = {
+    "upgrade-insecure-requests": True,
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -311,20 +304,22 @@ TFL = {  # London
     "app_key": os.environ.get("TFL_APP_KEY"),
 }
 TFE_OPERATORS = {
-    "Lothian Buses",
-    "Lothian Country Buses",
-    "East Coast Buses",
-    "Edinburgh Trams",
+    # "Lothian Buses",
+    # "Lothian Country Buses",
+    # "East Coast Buses",
+    # "Edinburgh Trams",
 }
 
 NTA_API_KEY = os.environ.get("NTA_API_KEY")  # Ireland
-
 ALLOW_VEHICLE_NOTES_OPERATORS = (
     "NATX",  # National Express
     "SCLK",  # Scottish Citylink
     "ie-526",  # Irish Citylink
     "ie-1178",  # Dublin Express
 )
+
+UMAMI_TOKEN = os.environ.get("UMAMI_TOKEN")
+UMAMI_WEBSITE_ID = os.environ.get("UMAMI_WEBSITE_ID")
 
 NEW_VEHICLE_WEBHOOK_URL = os.environ.get("NEW_VEHICLE_WEBHOOK_URL")
 
@@ -339,4 +334,4 @@ TNDS_DIR = DATA_DIR / "TNDS"
 TURNSTILE_SITEKEY = os.environ.get("TURNSTILE_SITEKEY", "0x4AAAAAAAFWiyCqdh2c-5sy")
 TURNSTILE_SECRET = os.environ.get("TURNSTILE_SECRET")
 
-ABBREVIATE_HOURLY = False  # we override this in some tests, that's all
+ABBREVIATE_HOURLY = True  # we override this in some tests, that's all

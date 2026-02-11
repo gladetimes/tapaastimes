@@ -1,7 +1,6 @@
 import functools
 import io
 import zipfile
-import re
 from datetime import timedelta
 
 import xmltodict
@@ -147,7 +146,7 @@ class Command(ImportLiveVehiclesCommand):
         operators = self.get_operator(operator_ref)
 
         if operator_ref == "TFLO":
-            defaults["livery_id"] = 1
+            defaults["livery_id"] = 262
             defaults["operator_id"] = operator_ref
             if vehicle_ref.startswith("TMP"):
                 defaults["notes"] = "Spare ticket machine"
@@ -155,27 +154,14 @@ class Command(ImportLiveVehiclesCommand):
             vehicles = self.vehicles.filter(
                 Q(operator__in=operators) | Q(operator=None)
             )
-        elif operator_ref in ("BNSM", "BNVB", "BNGN", "BNFM", "BNML", "BNDB"):
-            defaults["operator_id"] = operator_ref
-            normalized_ref = vehicle_ref.replace(" ", "").replace("_", "").replace("-", "")
-            is_valid_ref = (
-                re.match(r"^\d{1,5}$", normalized_ref) or
-                re.match(r"^[A-Z]{1,3}\d{1,4}[A-Z]{1,3}$", normalized_ref)
-            )
-            if not is_valid_ref:
-                defaults["notes"] = "Spare ticket machine"
-                defaults["locked"] = True
-            else:
-                defaults["livery_id"] = 2
-            vehicles = self.vehicles.filter(Q(operator__in=operators) | Q(operator=None))
         elif not operators:
             vehicles = self.vehicles.filter(operator=None)
         elif len(operators) == 1:
             operator = operators[0]
 
             defaults["operator"] = operator
-            if operator.parent:
-                condition = Q(operator__parent=operator.parent)
+            if operator.group_id:
+                condition = Q(operator__group_id=operator.group_id)
                 vehicles = self.vehicles.filter(condition)
             else:
                 vehicles = self.vehicles.filter(operator=operator)
@@ -245,11 +231,11 @@ class Command(ImportLiveVehiclesCommand):
         services = self.services.filter(line_name_query).defer("geometry")
 
         if item["MonitoredVehicleJourney"]["OperatorRef"] == "TFLO":
-            return services.filter(source__name="L").first()
+            return services.filter(route__source__name="L").first()
 
         if not operators:
             pass
-        elif len(operators) == 1 and operators[0].parent and destination_ref:
+        elif len(operators) == 1 and operators[0].group_id and destination_ref:
             operator = operators[0]
 
             # first try taking OperatorRef at face value
@@ -259,9 +245,9 @@ class Command(ImportLiveVehiclesCommand):
             except (Service.DoesNotExist, Service.MultipleObjectsReturned):
                 pass
 
-            condition = Q(parent=operator.parent)
+            condition = Q(group_id=operator.group_id)
 
-            # in case the vehicle operator has a different parent (e.g. HCTY)
+            # in case the vehicle operator has a different group (e.g. HCTY)
             if vehicle_operator_id != operator.noc:
                 condition |= Q(noc=vehicle_operator_id)
 
@@ -413,12 +399,13 @@ class Command(ImportLiveVehiclesCommand):
         if (
             operator_ref == "NCTR"
             and origin_aimed_departure_time is None
-            and journey_ref[:2] == "NT"
-            and journey_ref.count("-") == 9
         ):
-            origin_aimed_departure_time = timezone.make_aware(
-                parse_datetime(journey_ref[-30:-11])
-            )
+            try:
+                origin_aimed_departure_time = timezone.make_aware(
+                    parse_datetime(journey_ref[-30:-11])
+                )
+            except ValueError:
+                pass
 
         if origin_aimed_departure_time:
             difference = origin_aimed_departure_time - datetime

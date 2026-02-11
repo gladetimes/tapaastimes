@@ -4,13 +4,11 @@ services:
     build: .
     entrypoint: sh -c "uv sync --group dev --group test; DEBUG=1 exec ./manage.py runserver 0.0.0.0:8000"
     container_name: django_web
-    env_file: .env
     environment:
       - SECRET_KEY=${SECRET_KEY-}
       - DATABASE_URL=${DATABASE_URL-postgis://postgres:postgres@postgres/postgres}
       - REDIS_URL=${REDIS_URL-redis://redis:6379}
       - NTA_API_KEY
-      - NEW_VEHICLE_WEBHOOK_URL
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - PYTHONWARNINGS=all

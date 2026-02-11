@@ -3,10 +3,6 @@
 
 IGOB:
   name: National Express Accessible Transport
-  url: https://www.nationalexpress.com/en/neat
-  phone: ""
-  email: ""
-  address: ""
 AVMT:
   name: Axe Valley Mini Travel (AVMT)
   url: https://avmtbustimes.wixsite.com/mysite/timetables
@@ -280,3 +276,11 @@ GOCH:
   name: Go Bus
 KNCO:
   url: https://kentcountrybuses.co.uk/
+ASHT:
+  url: https://ashcrofttravel.co.uk/
+FXTX:
+  url: https://www.felixcoaches.co.uk/
+HASO:
+  url: https://harpurscoachesltd.co.uk/
+LCAC:
+  url: https://lakelandcommercials.com/coach-and-taxi-services/

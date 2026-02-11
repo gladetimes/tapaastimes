@@ -236,6 +236,7 @@ class LiveDeparturesTest(TestCase):
                 "fixtures/vcr/edinburgh.yaml", decode_compressed_response=True
             ),
             self.assertNumQueries(10),
+            override_settings(TFE_OPERATORS={"Lothian Buses"}),
         ):
             response = self.client.get(stop.get_absolute_url())
         self.assertContains(response, '<a href="/vehicles/none-686#journeys/None">')
@@ -401,15 +402,15 @@ class LiveDeparturesTest(TestCase):
         self.assertEqual(0, VehicleJourney.objects.count())
 
         # test the actual task
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(17):
             log_vehicle_journey(*args[:-1], self.trip.id)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(5):
             log_vehicle_journey(*args[:-1], self.trip.id)
 
         Vehicle.objects.update(latest_journey=None)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             log_vehicle_journey(*args[:-1], self.trip.id)
 
         journey = VehicleJourney.objects.get()
