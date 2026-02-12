@@ -17,7 +17,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app/
 
 COPY uv.lock pyproject.toml /app/
-RUN uv sync --frozen
+RUN uv sync --frozen --python 3.11
 
 ENV PATH="/app/.venv/bin:$PATH"
 
