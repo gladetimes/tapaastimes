@@ -14,36 +14,32 @@ FROM ghcr.io/jclgoodwin/bustimes.org/bustimes-base:3.14
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# --- FIX START: Install build tools needed for the patch ---
-# We need git to clone the source and build-essential to compile it
+# 1. Install system build tools (Debian-based)
 RUN apt-get update && apt-get install -y \
     git \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
-# --- FIX END ---
 
 WORKDIR /app/
 
 COPY uv.lock pyproject.toml /app/
 
-# --- FIX START: Manual Pyrobuf Patch ---
-# 1. Create the virtual environment manually
+# --- FIX START: ROBUST PYROBUF PATCH ---
 RUN uv venv
 ENV VIRTUAL_ENV=/app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# 2. Install build dependencies, then Clone, Patch, and Install pyrobuf
-RUN uv pip install cython setuptools wheel jinja2 && \
-    git clone https://github.com/appnexus/pyrobuf.git /tmp/pyrobuf && \
-    # Inject 'self.dry_run = False' to fix the Python 3.14 compatibility error
-    sed -i "s/self.include_dirs = None/self.include_dirs = None; self.dry_run = False/" /tmp/pyrobuf/setup.py && \
-    # Install the patched version into the venv
+# 2. Install older setuptools (safer for legacy builds) and build tools
+RUN uv pip install "setuptools<70" wheel cython jinja2
+
+# 3. Clone and Patch pyrobuf
+# We target 'Distribution.__init__' which is standard, ensuring the patch applies.
+RUN git clone https://github.com/appnexus/pyrobuf.git /tmp/pyrobuf && \
+    sed -i "s/Distribution.__init__(self, attrs)/Distribution.__init__(self, attrs); self.dry_run = False/" /tmp/pyrobuf/setup.py && \
     uv pip install /tmp/pyrobuf && \
     rm -rf /tmp/pyrobuf
 
-# 3. Install remaining dependencies from lockfile
-# We use 'uv export' with --no-hashes to prevent uv from trying to reinstall 
-# the broken pyrobuf from PyPI due to hash mismatches.
+# 4. Install remaining dependencies
 RUN uv export --frozen --no-hashes --format=requirements-txt > requirements.txt && \
     uv pip install -r requirements.txt
 # --- FIX END ---
