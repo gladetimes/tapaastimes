@@ -15,8 +15,8 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
-      - "35729:35729"
+      - "8001:8000"
+      - "35730:35729"
     restart: on-failure
 
   postgres:
